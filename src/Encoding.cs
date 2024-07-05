@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -17,9 +18,9 @@ namespace Efferent.HL7.V2
 
         private static readonly string[] _segmentDelimiters = { "\r\n", "\n\r", "\r", "\n" };
         private char[] _charsThatMightNeedEncoding;
-        
+
         public HL7Encoding()
-        {            
+        {
             // set the defaults
             _charsThatMightNeedEncoding = new[] { '<', '\r', '\n', FieldDelimiter, ComponentDelimiter, RepeatDelimiter, EscapeCharacter, SubComponentDelimiter };
         }
@@ -42,8 +43,8 @@ namespace Efferent.HL7.V2
             }
             _charsThatMightNeedEncoding = new[] { '<', '\r', '\n', FieldDelimiter, ComponentDelimiter, RepeatDelimiter, EscapeCharacter, SubComponentDelimiter };
         }
-        
-        
+
+
         public void EvaluateSegmentDelimiter(string message)
         {
             foreach (var delim in _segmentDelimiters)
@@ -55,7 +56,7 @@ namespace Efferent.HL7.V2
                 }
             }
 
-            throw new HL7Exception("Segment delimiter not found in message", HL7Exception.BAD_MESSAGE);
+            throw new HL7Exception("Segment delimiter not found in message", HL7Exception.BadMessage);
         }
 
         public  string Encode(string val)
@@ -70,10 +71,10 @@ namespace Efferent.HL7.V2
             // Disabled as it was breaking the CustomDelimiterTest() test method
             // if (val.IndexOfAny(_charsThatMightNeedEncoding) < 0)
             //     return val;
-            
+
             var sb = new StringBuilder();
 
-            for (int i = 0; i < val.Length; i++) 
+            for (int i = 0; i < val.Length; i++)
             {
                 char c = val[i];
 
@@ -110,7 +111,7 @@ namespace Efferent.HL7.V2
                         continueEncoding = true;
                     }
                 }
-                
+
                 if (continueEncoding)
                 {
                     if (c == this.ComponentDelimiter)
@@ -145,7 +146,7 @@ namespace Efferent.HL7.V2
                     }
                     else if (c == 10 || c == 13) // All other non-visible characters will be preserved
                     {
-                        string v = string.Format("{0:X2}",(int)c);
+                        string v = string.Format(CultureInfo.InvariantCulture, "{0:X2}", (int)c);
 
                         if ((v.Length % 2) != 0) // make number of digits even, this test would only be needed for values > 0xFF
                             v = "0" + v;
@@ -169,7 +170,7 @@ namespace Efferent.HL7.V2
         {
             if (string.IsNullOrWhiteSpace(encodedValue))
                 return encodedValue;
-            
+
             if (!encodedValue.Contains(EscapeCharacter))
             {
                 // no need to decode, just return as is
@@ -204,7 +205,7 @@ namespace Efferent.HL7.V2
 
                 if (seq.Length == 0)
                     continue;
-            
+
                 switch (seq)
                 {
                     case "H": // Start higlighting
@@ -232,7 +233,7 @@ namespace Efferent.HL7.V2
                         result.Append("<BR>");
                         break;
                     default:
-                        if (seq.StartsWith("X"))
+                        if (seq.StartsWith("X", StringComparison.Ordinal))
                         {
                             byte[] bytes = Enumerable.Range(0, seq.Length - 1)
                                 .Where(x => x % 2 == 0)

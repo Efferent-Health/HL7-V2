@@ -2,16 +2,16 @@ using System.Collections.Generic;
 
 namespace Efferent.HL7.V2
 {
-    internal class ComponentCollection : List<Component>
+    internal sealed class ComponentCollection : List<Component>
     {
         public ComponentCollection()
-        {        
+        {
         }
 
         public ComponentCollection(int initialCapacity) : base(initialCapacity)
-        {        
+        {
         }
-        
+
         /// <summary>
         /// Component indexer
         /// </summary>

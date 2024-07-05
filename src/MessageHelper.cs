@@ -33,7 +33,7 @@ namespace Efferent.HL7.V2
 
         public static string LongDateWithFractionOfSecond(DateTime dt)
         {
-            return dt.ToString("yyyyMMddHHmmss.FFFF");
+            return dt.ToString("yyyyMMddHHmmss.FFFF", CultureInfo.InvariantCulture);
         }
 
         public static string[] ExtractMessages(string messages)
@@ -68,7 +68,7 @@ namespace Efferent.HL7.V2
                     throw new FormatException("Invalid date format");
 
                 var groups = matches[0].Groups;
-                int year = int.Parse(groups[1].Value);
+                int year = int.Parse(groups[1].Value, CultureInfo.InvariantCulture);
                 int month = groups[2].Success ? int.Parse(groups[2].Value, CultureInfo.InvariantCulture) : 1;
                 int day = groups[3].Success ? int.Parse(groups[3].Value, CultureInfo.InvariantCulture) : 1;
                 int hours = groups[4].Success ? int.Parse(groups[4].Value, CultureInfo.InvariantCulture) : 0;
@@ -103,7 +103,7 @@ namespace Efferent.HL7.V2
         {
             if (encoding == null)
                 encoding = Encoding.UTF8;
-            
+
             byte[] data = encoding.GetBytes(message);
             byte[] buffer = new byte[data.Length + 3];
             buffer[0] = 11; // VT

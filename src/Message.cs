@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
+#pragma warning disable CA1854
+
 namespace Efferent.HL7.V2
 {
     public class Message
@@ -19,7 +21,7 @@ namespace Efferent.HL7.V2
         public int SegmentCount { get; set; }
         public HL7Encoding Encoding { get; set; } = new HL7Encoding();
 
-        private static readonly char[] _queryDelimiter = { '.' }; 
+        private static readonly char[] _queryDelimiter = { '.' };
 
         private const string segmentRegex = @"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$";
         private const string fieldRegex = @"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$";
@@ -78,7 +80,7 @@ namespace Efferent.HL7.V2
             }
             catch (Exception ex)
             {
-                throw new HL7Exception("Unhandled Exception in validation - " + ex.Message, HL7Exception.BAD_MESSAGE, ex);
+                throw new HL7Exception("Unhandled Exception in validation - " + ex.Message, HL7Exception.BadMessage, ex);
             }
 
             if (isValid)
@@ -111,11 +113,11 @@ namespace Efferent.HL7.V2
 
                     try
                     {
-                        strSerializedMessage = this.SerializeMessage(false); 
+                        strSerializedMessage = this.SerializeMessage(false);
                     }
                     catch (HL7Exception ex)
                     {
-                        throw new HL7Exception("Failed to serialize parsed message with error - " + ex.Message, HL7Exception.PARSING_ERROR, ex);
+                        throw new HL7Exception("Failed to serialize parsed message with error - " + ex.Message, HL7Exception.ParsingError, ex);
                     }
 
                     if (!string.IsNullOrEmpty(strSerializedMessage))
@@ -125,15 +127,15 @@ namespace Efferent.HL7.V2
                     }
                     else
                     {
-                        throw new HL7Exception("Unable to serialize to original message - ", HL7Exception.PARSING_ERROR);
+                        throw new HL7Exception("Unable to serialize to original message - ", HL7Exception.ParsingError);
                     }
                 }
                 catch (Exception ex)
                 {
-                    throw new HL7Exception("Failed to parse the message with error - " + ex.Message, HL7Exception.PARSING_ERROR, ex);
+                    throw new HL7Exception("Failed to parse the message with error - " + ex.Message, HL7Exception.ParsingError, ex);
                 }
             }
-            
+
             return isParsed;
         }
 
@@ -145,7 +147,7 @@ namespace Efferent.HL7.V2
         public string SerializeMessage(bool validate)
         {
             if (validate && !this.validateMessage())
-                throw new HL7Exception("Failed to validate the updated message", HL7Exception.BAD_MESSAGE);
+                throw new HL7Exception("Failed to validate the updated message", HL7Exception.BadMessage);
 
             var strMessage = new StringBuilder();
             string currentSegName = string.Empty;
@@ -159,7 +161,7 @@ namespace Efferent.HL7.V2
                     {
                         currentSegName = seg.Name;
                         strMessage.Append(seg.Name);
-                        
+
                         if (seg.FieldList.Count > 0)
                             strMessage.Append(Encoding.FieldDelimiter);
 
@@ -193,15 +195,15 @@ namespace Efferent.HL7.V2
                                 serializeField(field, strMessage);
                             }
                         }
-                        
+
                         strMessage.Append(Encoding.SegmentDelimiter);
                     }
                 }
                 catch (Exception ex)
                 {
                     if (currentSegName == "MSH")
-                        throw new HL7Exception("Failed to serialize the MSH segment with error - " + ex.Message, HL7Exception.SERIALIZATION_ERROR, ex);
-                    else 
+                        throw new HL7Exception("Failed to serialize the MSH segment with error - " + ex.Message, HL7Exception.SerializationError, ex);
+                    else
                         throw;
                 }
 
@@ -209,7 +211,7 @@ namespace Efferent.HL7.V2
             }
             catch (Exception ex)
             {
-                throw new HL7Exception("Failed to serialize the message with error - " + ex.Message, HL7Exception.SERIALIZATION_ERROR, ex);
+                throw new HL7Exception("Failed to serialize the message with error - " + ex.Message, HL7Exception.SerializationError, ex);
             }
         }
 
@@ -225,7 +227,7 @@ namespace Efferent.HL7.V2
             int componentIndex = 0;
             int subComponentIndex = 0;
             string strValue = string.Empty;
-            
+
             var allComponents = strValueFormat.Split(_queryDelimiter);
             int comCount = allComponents.Length;
             bool isValid = validateValueFormat(allComponents);
@@ -233,16 +235,16 @@ namespace Efferent.HL7.V2
             if (isValid)
             {
                 var matches = System.Text.RegularExpressions.Regex.Matches(allComponents[0], segmentRegex);
-                
+
                 if (matches.Count < 1)
                     throw new HL7Exception("Request format is not valid: " + strValueFormat);
 
                 segmentName = matches[0].Groups[1].Value;
-                
-                if (matches[0].Length > 3) 
+
+                if (matches[0].Length > 3)
                 {
-                    Int32.TryParse(matches[0].Groups[3].Value, out segmentOccurrence);
-                    segmentOccurrence--;
+                    if (Int32.TryParse(matches[0].Groups[3].Value, out segmentOccurrence))
+                        segmentOccurrence--;
                 }
 
                 if (SegmentList.ContainsKey(segmentName))
@@ -251,38 +253,42 @@ namespace Efferent.HL7.V2
 
                     if (comCount == 4)
                     {
-                        Int32.TryParse(allComponents[2], out componentIndex);
-                        Int32.TryParse(allComponents[3], out subComponentIndex);
-
-                        try
+                        if (Int32.TryParse(allComponents[2], out componentIndex))
                         {
-                            var field = this.getField(segment, allComponents[1]);
-                            strValue = field.ComponentList[componentIndex - 1].SubComponentList[subComponentIndex - 1].Value;
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new HL7Exception("SubComponent not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                            if (Int32.TryParse(allComponents[3], out subComponentIndex))
+                            {
+                                try
+                                {
+                                    var field = getField(segment, allComponents[1]);
+                                    strValue = field.ComponentList[componentIndex - 1].SubComponentList[subComponentIndex - 1].Value;
+                                }
+                                catch (Exception ex)
+                                {
+                                    throw new HL7Exception("SubComponent not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                                }
+                            }
                         }
                     }
                     else if (comCount == 3)
                     {
-                        Int32.TryParse(allComponents[2], out componentIndex);
-
-                        try
+                        if (Int32.TryParse(allComponents[2], out componentIndex))
                         {
-                            var field = this.getField(segment, allComponents[1]);
-                            strValue = field.ComponentList[componentIndex - 1].Value;
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new HL7Exception("Component not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                            try
+                            {
+                                var field = getField(segment, allComponents[1]);
+                                strValue = field.ComponentList[componentIndex - 1].Value;
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new HL7Exception("Component not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                            }
                         }
                     }
                     else if (comCount == 2)
                     {
                         try
                         {
-                            var field = this.getField(segment, allComponents[1]);
+                            var field = getField(segment, allComponents[1]);
                             strValue = field.Value;
                         }
                         catch (Exception ex)
@@ -341,40 +347,44 @@ namespace Efferent.HL7.V2
                     {
                         if (comCount == 4)
                         {
-                            Int32.TryParse(allComponents[2], out componentIndex);
-                            Int32.TryParse(allComponents[3], out subComponentIndex);
-
-                            try
+                            if (Int32.TryParse(allComponents[2], out componentIndex))
                             {
-                                var field = this.getField(segment, allComponents[1]);
-                                field.ComponentList[componentIndex - 1].SubComponentList[subComponentIndex - 1].Value = strValue;
-                                isSet = true;
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new HL7Exception("SubComponent not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                                if (Int32.TryParse(allComponents[3], out subComponentIndex))
+                                {
+                                    try
+                                    {
+                                        var field = getField(segment, allComponents[1]);
+                                        field.ComponentList[componentIndex - 1].SubComponentList[subComponentIndex - 1].Value = strValue;
+                                        isSet = true;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        throw new HL7Exception("SubComponent not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                                    }
+                                }
                             }
                         }
                         else if (comCount == 3)
                         {
-                            Int32.TryParse(allComponents[2], out componentIndex);
-
-                            try
+                            if (Int32.TryParse(allComponents[2], out componentIndex))
                             {
-                                var field = this.getField(segment, allComponents[1]);
-                                field.ComponentList[componentIndex - 1].Value = strValue;
-                                isSet = true;
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new HL7Exception("Component not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                                try
+                                {
+                                    var field = getField(segment, allComponents[1]);
+                                    field.ComponentList[componentIndex - 1].Value = strValue;
+                                    isSet = true;
+                                }
+                                catch (Exception ex)
+                                {
+                                    throw new HL7Exception("Component not available - " + strValueFormat + " Error: " + ex.Message, ex);
+                                }
                             }
                         }
                         else if (comCount == 2)
                         {
                             try
                             {
-                                var field = this.getField(segment, allComponents[1]);
+                                var field = getField(segment, allComponents[1]);
                                 field.Value = strValue;
                                 isSet = true;
                             }
@@ -388,7 +398,6 @@ namespace Efferent.HL7.V2
                             throw new HL7Exception("Cannot overwrite a segment value");
                         }
                     }
-
                 }
                 else
                 {
@@ -411,21 +420,20 @@ namespace Efferent.HL7.V2
         public bool IsComponentized(string strValueFormat)
         {
             bool isComponentized = false;
-            string segmentName = string.Empty;
             var allComponents = strValueFormat.Split(_queryDelimiter);
             int comCount = allComponents.Length;
             bool isValid = validateValueFormat(allComponents);
 
             if (isValid)
             {
-                segmentName = allComponents[0];
+                var segmentName = allComponents[0];
 
                 if (comCount >= 2)
                 {
                     try
                     {
                         var segment = SegmentList[segmentName].First();
-                        var field = this.getField(segment, allComponents[1]);
+                        var field = getField(segment, allComponents[1]);
 
                         isComponentized = field.IsComponentized;
                     }
@@ -462,12 +470,12 @@ namespace Efferent.HL7.V2
             {
                 var segmentName = allComponents[0];
                 var segment = SegmentList[segmentName].First();
-                
+
                 if (comCount >= 2)
                 {
                     try
                     {
-                        var count = this.getFieldRepetitions(segment, allComponents[1]);
+                        var count = getFieldRepetitions(segment, allComponents[1]);
                         return count > 1;
                     }
                     catch (Exception ex)
@@ -509,10 +517,10 @@ namespace Efferent.HL7.V2
                     try
                     {
                         var segment = SegmentList[segmentName].First();
-                        var field = this.getField(segment, allComponents[1]);
+                        var field = getField(segment, allComponents[1]);
 
-                        Int32.TryParse(allComponents[2], out componentIndex);
-                        isSubComponentized = field.ComponentList[componentIndex - 1].IsSubComponentized;
+                        if (Int32.TryParse(allComponents[2], out componentIndex))
+                            isSubComponentized = field.ComponentList[componentIndex - 1].IsSubComponentized;
                     }
                     catch (Exception ex)
                     {
@@ -584,7 +592,7 @@ namespace Efferent.HL7.V2
         /// <param name="segmentName">Segment to be removed</param>
         /// <param name="index">Zero-based index of the segment to be removed, in case of multiple. Default is 0.</param>
         /// <returns>True if found and removed successfully, otherwise false</returns>
-        public bool RemoveSegment(string segmentName, int index = 0) 
+        public bool RemoveSegment(string segmentName, int index = 0)
         {
             try
             {
@@ -592,7 +600,7 @@ namespace Efferent.HL7.V2
                     return false;
 
                 var list = SegmentList[segmentName];
-                
+
                 if (list.Count <= index)
                     return false;
 
@@ -614,12 +622,12 @@ namespace Efferent.HL7.V2
 
         public List<Segment> Segments(string segmentName)
         {
-            return getAllSegmentsInOrder().FindAll(o=> o.Name.Equals(segmentName));
+            return getAllSegmentsInOrder().FindAll(o=> o.Name.Equals(segmentName, StringComparison.Ordinal));
         }
 
         public Segment DefaultSegment(string segmentName)
         {
-            return getAllSegmentsInOrder().First(o => o.Name.Equals(segmentName));
+            return getAllSegmentsInOrder().First(o => o.Name.Equals(segmentName, StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -640,16 +648,16 @@ namespace Efferent.HL7.V2
                 var dateString = MessageHelper.LongDateWithFractionOfSecond(DateTime.Now);
                 var delim = this.Encoding.FieldDelimiter;
 
-                string response = "MSH" + this.Encoding.AllDelimiters + delim + 
-                    sendingApplication + delim + 
+                string response = "MSH" + this.Encoding.AllDelimiters + delim +
+                    sendingApplication + delim +
                     sendingFacility + delim +
-                    receivingApplication + delim + 
+                    receivingApplication + delim +
                     receivingFacility + delim +
-                    this.Encoding.Encode(dateString) + delim + 
-                    (security ?? string.Empty) + delim + 
-                    messageType + delim + 
+                    this.Encoding.Encode(dateString) + delim +
+                    (security ?? string.Empty) + delim +
+                    messageType + delim +
                     messageControlID + delim +
-                    processingID + delim + 
+                    processingID + delim +
                     version + this.Encoding.SegmentDelimiter;
 
                 var message = new Message(response);
@@ -668,7 +676,7 @@ namespace Efferent.HL7.V2
 
             return MessageHelper.GetMLLP(hl7);
         }
-        
+
         /// <summary>
         /// Builds an ACK or NACK message for this message
         /// </summary>
@@ -686,12 +694,12 @@ namespace Efferent.HL7.V2
                 var dateString = MessageHelper.LongDateWithFractionOfSecond(DateTime.Now);
                 var msh = this.SegmentList["MSH"].First();
                 var delim = this.Encoding.FieldDelimiter;
-                
+
                 response.Append("MSH").Append(this.Encoding.AllDelimiters).Append(delim).Append(msh.FieldList[4].Value).Append(delim).Append(msh.FieldList[5].Value).Append(delim)
                     .Append(msh.FieldList[2].Value).Append(delim).Append(msh.FieldList[3].Value).Append(delim)
                     .Append(dateString).Append(delim).Append(delim).Append("ACK").Append(delim).Append(this.MessageControlID).Append(delim)
                     .Append(this.ProcessingID).Append(delim).Append(this.Version).Append(this.Encoding.SegmentDelimiter);
-                
+
                 response.Append("MSA").Append(delim).Append(code).Append(delim).Append(this.MessageControlID).Append((isNack ? delim + errMsg : string.Empty)).Append(this.Encoding.SegmentDelimiter);
             }
             else
@@ -699,13 +707,13 @@ namespace Efferent.HL7.V2
                 return null;
             }
 
-            try 
+            try
             {
                 var message = new Message(response.ToString());
                 message.ParseMessage(bypassValidation);
                 return message;
             }
-            catch 
+            catch
             {
                 return null;
             }
@@ -717,21 +725,21 @@ namespace Efferent.HL7.V2
         /// <param name="segment">The segment object to search in/param>
         /// <param name="index">The index of the field within the segment/param>
         /// <returns>A Field object</returns>
-        private Field getField(Segment segment, string index)
+        private static Field getField(Segment segment, string index)
         {
             int repetition = 0;
-            var matches = System.Text.RegularExpressions.Regex.Matches(index, fieldRegex);
+            var matches = Regex.Matches(index, fieldRegex);
 
             if (matches.Count < 1)
-                throw new Exception("Invalid field index");
+                throw new HL7Exception("Invalid field index");
 
-            Int32.TryParse(matches[0].Groups[1].Value, out int fieldIndex);
-            fieldIndex--;
+            if (Int32.TryParse(matches[0].Groups[1].Value, out int fieldIndex))
+                fieldIndex--;
 
             if (matches[0].Length > 3)
             {
-                Int32.TryParse(matches[0].Groups[3].Value, out repetition);
-                repetition--;
+                if (Int32.TryParse(matches[0].Groups[3].Value, out repetition))
+                    repetition--;
             }
 
             var field = segment.FieldList[fieldIndex];
@@ -750,15 +758,15 @@ namespace Efferent.HL7.V2
         /// <param name="segment">The segment object to search in/param>
         /// <param name="index">The index of the field within the segment/param>
         /// <returns>A boolean indicating whether the field has repetitions</returns>
-        private int getFieldRepetitions(Segment segment, string index)
+        private static int getFieldRepetitions(Segment segment, string index)
         {
-            var matches = System.Text.RegularExpressions.Regex.Matches(index, fieldRegex);
+            var matches = Regex.Matches(index, fieldRegex);
 
             if (matches.Count < 1)
                 return 0;
 
-            Int32.TryParse(matches[0].Groups[1].Value, out int fieldIndex);
-            fieldIndex--;
+            if (Int32.TryParse(matches[0].Groups[1].Value, out int fieldIndex))
+                fieldIndex--;
 
             var field = segment.FieldList[fieldIndex];
 
@@ -780,15 +788,15 @@ namespace Efferent.HL7.V2
                 {
                     // Check message length - MSH+Delimeters+12Fields in MSH
                     if (HL7Message.Length < 20)
-                        throw new HL7Exception("Message Length too short: " + HL7Message.Length + " chars.", HL7Exception.BAD_MESSAGE);
+                        throw new HL7Exception("Message Length too short: " + HL7Message.Length + " chars.", HL7Exception.BadMessage);
 
                     // Check if message starts with header segment
-                    if (!HL7Message.StartsWith("MSH"))
-                        throw new HL7Exception("MSH segment not found at the beginning of the message", HL7Exception.BAD_MESSAGE);
+                    if (!HL7Message.StartsWith("MSH", StringComparison.Ordinal))
+                        throw new HL7Exception("MSH segment not found at the beginning of the message", HL7Exception.BadMessage);
 
                     this.Encoding.EvaluateSegmentDelimiter(this.HL7Message);
                     this.allSegments = MessageHelper.SplitMessage(HL7Message);
-                    
+
                     this.HL7Message = string.Join(this.Encoding.SegmentDelimiter, allSegments) + this.Encoding.SegmentDelimiter;
 
                     // Check Segment Name & 4th character of each segment
@@ -803,10 +811,10 @@ namespace Efferent.HL7.V2
                         bool isValidSegmentName = System.Text.RegularExpressions.Regex.IsMatch(segmentName, segmentRegex);
 
                         if (!isValidSegmentName)
-                            throw new HL7Exception("Invalid segment name found: " + strSegment, HL7Exception.BAD_MESSAGE);
+                            throw new HL7Exception("Invalid segment name found: " + strSegment, HL7Exception.BadMessage);
 
                         if (strSegment.Length > 3 && fourthCharMSH != strSegment[3])
-                            throw new HL7Exception("Invalid segment found: " + strSegment, HL7Exception.BAD_MESSAGE);
+                            throw new HL7Exception("Invalid segment found: " + strSegment, HL7Exception.BadMessage);
                     }
 
                     string _fieldDelimiters_Message = this.allSegments[0].Substring(3, 8 - 3);
@@ -816,7 +824,7 @@ namespace Efferent.HL7.V2
                     int countFieldSepInMSH = this.allSegments[0].Count(f => f == Encoding.FieldDelimiter);
 
                     if (countFieldSepInMSH < 11)
-                        throw new HL7Exception("MSH segment doesn't contain all the required fields", HL7Exception.BAD_MESSAGE);
+                        throw new HL7Exception("MSH segment doesn't contain all the required fields", HL7Exception.BadMessage);
 
                     // Find Message Version
                     var MSHFields = this.allSegments[0].Split(Encoding.FieldDelimiter);
@@ -824,7 +832,7 @@ namespace Efferent.HL7.V2
                     if (MSHFields.Length >= 12)
                         this.Version = this.Encoding.Decode(MSHFields[11]).Split(Encoding.ComponentDelimiter)[0];
                     else
-                        throw new HL7Exception("HL7 version not found in the MSH segment", HL7Exception.REQUIRED_FIELD_MISSING);
+                        throw new HL7Exception("HL7 version not found in the MSH segment", HL7Exception.RequiredFieldMissing);
 
                     // Find Message Type & Trigger Event
                     try
@@ -837,21 +845,21 @@ namespace Efferent.HL7.V2
 
                             if (MSH_9_comps.Length >= 3)
                                 this.MessageStructure = MSH_9_comps[2];
-                            else if (MSH_9_comps.Length > 0 && MSH_9_comps[0] != null && MSH_9_comps[0].Equals("ACK"))
+                            else if (MSH_9_comps.Length > 0 && MSH_9_comps[0] != null && MSH_9_comps[0].Equals("ACK", StringComparison.Ordinal))
                                 this.MessageStructure = "ACK";
                             else if (MSH_9_comps.Length == 2)
                                 this.MessageStructure = MSH_9_comps[0] + "_" + MSH_9_comps[1];
                             else
-                                throw new HL7Exception("Message Type & Trigger Event value not found in message", HL7Exception.UNSUPPORTED_MESSAGE_TYPE);
+                                throw new HL7Exception("Message Type & Trigger Event value not found in message", HL7Exception.UnsupportedMessageType);
                         }
                         else
                         {
-                            throw new HL7Exception("MSH.9 not available", HL7Exception.UNSUPPORTED_MESSAGE_TYPE);
+                            throw new HL7Exception("MSH.9 not available", HL7Exception.UnsupportedMessageType);
                         }
                     }
                     catch (System.IndexOutOfRangeException e)
                     {
-                        throw new HL7Exception("Can't find message structure (MSH.9.3) - " + e.Message, HL7Exception.UNSUPPORTED_MESSAGE_TYPE, e);
+                        throw new HL7Exception("Can't find message structure (MSH.9.3) - " + e.Message, HL7Exception.UnsupportedMessageType, e);
                     }
 
                     try
@@ -859,11 +867,11 @@ namespace Efferent.HL7.V2
                         this.MessageControlID = this.Encoding.Decode(MSHFields[9]);
 
                         if (string.IsNullOrEmpty(this.MessageControlID))
-                            throw new HL7Exception("MSH.10 - Message Control ID not found", HL7Exception.REQUIRED_FIELD_MISSING);
+                            throw new HL7Exception("MSH.10 - Message Control ID not found", HL7Exception.RequiredFieldMissing);
                     }
                     catch (Exception ex)
                     {
-                        throw new HL7Exception("Error occured while accessing MSH.10 - " + ex.Message, HL7Exception.REQUIRED_FIELD_MISSING, ex);
+                        throw new HL7Exception("Error occured while accessing MSH.10 - " + ex.Message, HL7Exception.RequiredFieldMissing, ex);
                     }
 
                     try
@@ -871,19 +879,19 @@ namespace Efferent.HL7.V2
                         this.ProcessingID = this.Encoding.Decode(MSHFields[10]);
 
                         if (string.IsNullOrEmpty(this.ProcessingID))
-                            throw new HL7Exception("MSH.11 - Processing ID not found", HL7Exception.REQUIRED_FIELD_MISSING);
+                            throw new HL7Exception("MSH.11 - Processing ID not found", HL7Exception.RequiredFieldMissing);
                     }
                     catch (Exception ex)
                     {
-                        throw new HL7Exception("Error occured while accessing MSH.11 - " + ex.Message, HL7Exception.REQUIRED_FIELD_MISSING, ex);
+                        throw new HL7Exception("Error occured while accessing MSH.11 - " + ex.Message, HL7Exception.RequiredFieldMissing, ex);
                     }
                 }
                 else
-                    throw new HL7Exception("No Message Found", HL7Exception.BAD_MESSAGE);
+                    throw new HL7Exception("No Message Found", HL7Exception.BadMessage);
             }
             catch (Exception ex)
             {
-                throw new HL7Exception("Failed to validate the message with error - " + ex.Message, HL7Exception.BAD_MESSAGE, ex);
+                throw new HL7Exception("Failed to validate the message with error - " + ex.Message, HL7Exception.BadMessage, ex);
             }
 
             return true;
@@ -902,7 +910,7 @@ namespace Efferent.HL7.V2
                 foreach (Component com in field.ComponentList)
                 {
                     indexCom++;
-                    
+
                     if (com.SubComponentList.Count > 0)
                         strMessage.Append(string.Join(Encoding.SubComponentDelimiter.ToString(), com.SubComponentList.Select(sc => Encoding.Encode(sc.Value))));
                     else
@@ -918,7 +926,7 @@ namespace Efferent.HL7.V2
             }
         }
 
-        /// <summary> 
+        /// <summary>
         /// Get all segments in order as they appear in original message. This the usual order: IN1|1 IN2|1 IN1|2 IN2|2
         /// </summary>
         /// <returns>A list of segments in the proper order</returns>
@@ -941,7 +949,7 @@ namespace Efferent.HL7.V2
         /// Validates the components of a value's position descriptor
         /// </summary>
         /// <returns>A boolean indicating whether all the components are valid or not</returns>
-        private bool validateValueFormat(string[] allComponents)
+        private static bool validateValueFormat(string[] allComponents)
         {
             bool isValid = false;
 

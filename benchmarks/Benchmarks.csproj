@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
-        <PackageReference Include="HL7-V2" Version="2.39" Condition="!$(DefineConstants.Contains('LOCAL_CODE'))" />
+        <PackageReference Include="HL7-V2" Version="3.0.0" Condition="!$(DefineConstants.Contains('LOCAL_CODE'))" />
     </ItemGroup>
 
     <ItemGroup>

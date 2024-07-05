@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Efferent.HL7.V2
 {
-    internal class FieldCollection : List<Field>
+    internal sealed class FieldCollection : List<Field>
     {
         internal new Field this[int index]
         {
@@ -50,7 +50,7 @@ namespace Efferent.HL7.V2
                     Field blankField = new Field(string.Empty, field.Encoding);
                     base.Add(blankField);
                 }
-                
+
                 base.Add(field);
             }
         }
