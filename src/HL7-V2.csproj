@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Lightweight HL7 2.x library compatible with .Net Standard and .Net Core</Description>
+    <Copyright>(c) Efferent Health, LLC</Copyright>
+    <VersionPrefix>2.39.1</VersionPrefix>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <AssemblyName>HL7-V2</AssemblyName>
+    <PackageId>HL7-V2</PackageId>
+    <PackageTags>hl7;hl7-v2;dotnet</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Efferent-Health/HL7-V2</RepositoryUrl>
+    <Configuration>Release</Configuration>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageProjectUrl>https://github.com/Efferent-Health/HL7-V2</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Efferent-Health/HL7-V2</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../LICENSE.txt" Pack="true" PackagePath="$(PackageLicenseFile)" />
+    <None Include="../README.md" Pack="true" PackagePath="$(PackageReadmeFile)" />
+  </ItemGroup>
+</Project>

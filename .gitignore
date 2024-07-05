@@ -1,0 +1,12 @@
+**/out
+**/bin
+**/obj
+project.lock.json
+.DS_Store
+/packages
+/node_modules
+**/*.suo
+.vs
+.idea
+BenchmarkDotNet.Artifacts
+.DotSettings.user
