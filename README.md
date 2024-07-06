@@ -432,9 +432,6 @@ catch
 ````
 
 ## Credits
-This library took Jayant Singh's HL7 parser (2013) as a foundation. Since then, it has been modified fundamentally, with respect to features, code quality, bugs and typos. 
-For more information about the original implementation read:
-- https://github.com/j4jayant/hl7-cSharp-parser
-- http://j4jayant.com/articles/hl7/31-hl7-parsing-lib
+This library has taken Jayant Singh's HL7 parser as its foundation: https://github.com/j4jayant/hl7-cSharp-parser
 
-The field encoding and decoding methods have been based on https://github.com/elomagic/hl7inspector
+The field encoding and decoding methods have been based on: https://github.com/elomagic/hl7inspector
