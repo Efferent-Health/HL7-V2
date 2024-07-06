@@ -5,7 +5,9 @@
 ![github](https://img.shields.io/github/stars/Efferent-Health/HL7-v2?style=flat&color=yellow)
 ![build](https://github.com/Efferent-Health/HL7-v2/actions/workflows/main.yml/badge.svg?branch=main)
 
-This is a lightweight library for building and parsing HL7 2.x messages, for .NET Standard, .NET Core, and .NET 5+. It is not tied to any particular version of HL7 nor validates against one. 
+This is a lightweight library for composing and parsing HL7 2.x messages, for modern .NET applications. 
+
+It is not tied to any particular version of HL7 nor validates against one. 
 
 ## Table of Contents
 
