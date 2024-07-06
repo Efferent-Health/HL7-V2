@@ -446,4 +446,4 @@ catch
 ## Credits
 This library has taken Jayant Singh's HL7 parser as its foundation: https://github.com/j4jayant/hl7-cSharp-parser
 
-The field encoding and decoding methods have been based on https://github.com/elomagic/hl7inspector
+The field encoding and decoding methods have been based on: https://github.com/elomagic/hl7inspector
