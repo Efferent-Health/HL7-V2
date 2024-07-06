@@ -7,6 +7,15 @@
 
 This is a lightweight library for building and parsing HL7 2.x messages, for .NET Standard, .NET Core, and .NET 5+. It is not tied to any particular version of HL7 nor validates against one. 
 
+## Table of Contents
+
+- [Usage and compatibility](#usage-and-compatibility)
+- [Object construction](#object-construction)
+- [Accessing Segments](#accessing-segments)
+- [Accessing Fields](#accessing-fields)
+- [Accessing Components](#accessing-components)
+- [Credits](#credits)
+
 ## Usage and compatibility
 
 This library is distributed via [nuget](https://www.nuget.org/packages/HL7-v2/latest) and targets two frameworks:
@@ -71,7 +80,10 @@ foreach (var strMsg in messages)
     // do something with the message object
 }
 ````
-## Bypass Validation
+### Bypass Validation
+
+Under certain conditions, it may be convenient to bypass the validation of the HL7 message by setting a flag in the `ParseMessage()` method, as shown:
+
 ````cSharp
 Message  message = new Message(strMsg)
 message.ParseMessage(true);
@@ -434,4 +446,4 @@ catch
 ## Credits
 This library has taken Jayant Singh's HL7 parser as its foundation: https://github.com/j4jayant/hl7-cSharp-parser
 
-The field encoding and decoding methods have been based on: https://github.com/elomagic/hl7inspector
+The field encoding and decoding methods have been based on https://github.com/elomagic/hl7inspector
