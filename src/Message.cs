@@ -122,6 +122,7 @@ namespace Efferent.HL7.V2
 
                     if (!string.IsNullOrEmpty(strSerializedMessage))
                     {
+                        this.Encoding.EvaluateSegmentDelimiter(this.HL7Message);
                         if (this.Equals(strSerializedMessage))
                             isParsed = true;
                     }

@@ -1004,6 +1004,31 @@ PV1|1|I|1999^2012^01||||004777^FAKES^FAKESSSS^J.|||SUR||||ADM|A0";
 
             var isParsed = message.ParseMessage();
             Assert.IsTrue(isParsed);
-        }        
+        }
+        
+[TestMethod]
+        public void BypassValidationParseMessage_ShouldReturnTrue()
+        {
+            string sampleMessage = @"MSH|^~\&|SCA|SCA|LIS|LIS|202107300000||ORU^R01||P|2.4|||||||
+PID|1|1234|1234||JOHN^DOE||19000101||||||||||||||
+OBR|1|1234|1234||||20210708|||||||||||||||20210708||||||||||
+OBX|1|TX|SCADOCTOR||^||||||F";
+
+            try
+            {
+                var msg = new Message(sampleMessage);
+                Assert.IsTrue(msg.ParseMessage(true));
+
+                Assert.IsNull(msg.MessageControlID, "MessageControlID should be null");
+
+                //just to make sure we have actually parsed the invalid MSH
+                string messageType = msg.GetValue("MSH.9");
+                Assert.AreEqual("ORU^R01", messageType, "Unexpected Message Type");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Unexpected exception", ex);
+            }
+        }
     }
 }
