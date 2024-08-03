@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -45,6 +46,8 @@ namespace Efferent.HL7.V2
             {
                 var arr1 = this.HL7Message.Split(this.Encoding.SegmentDelimiter.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 var arr2 = (obj as string).Split(this.Encoding.SegmentDelimiter.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+                DecodeHexaSequences(arr1);
 
                 return arr1.SequenceEqual(arr2);
             }
@@ -976,5 +979,32 @@ namespace Efferent.HL7.V2
 
             return isValid;
         }
+
+        /// <summary>
+        /// Decodes hexadecimal escape sequences from all message lines for comparison purposes
+        /// </summary>
+        /// <param name="message">Array of message lines</param>
+        private void DecodeHexaSequences(string[] message)
+        {
+            var esc = "\\x" + ((int)this.Encoding.EscapeCharacter).ToString("X2", CultureInfo.InvariantCulture);
+            var regex = new Regex(esc + "X([0-9A-Fa-f]*)" + esc);
+
+            for (int i=0; i<message.Length; i++)
+            {
+                if (!message[i].Contains(Encoding.EscapeCharacter))
+                    continue;
+
+                message[i] = regex.Replace(message[i], match =>
+                {
+                    string hexValue = match.Groups[1].Value;
+
+                    // Does not decode CR or LF
+                    if (hexValue != "0D" && hexValue != "0A")
+                        return HL7Encoding.DecodeHexString(hexValue);
+                    else
+                        return match.Value;
+                });
+            }
+        }        
     }
 }

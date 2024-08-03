@@ -233,23 +233,36 @@ namespace Efferent.HL7.V2
                         result.Append("<BR>");
                         break;
                     default:
-                        if (seq.StartsWith("X", StringComparison.Ordinal))
-                        {
-                            byte[] bytes = Enumerable.Range(0, seq.Length - 1)
-                                .Where(x => x % 2 == 0)
-                                .Select(x => Convert.ToByte(seq.Substring(x + 1, 2), 16))
-                                .ToArray();
-                            result.Append(Encoding.UTF8.GetString(bytes));
-                        }
+                        if (seq[0]=='X')
+                            result.Append(DecodeHexString(seq.Substring(1)));
                         else
-                        {
                             result.Append(seq);
-                        }
                         break;
                 }
             }
 
             return result.ToString();
+        }
+
+        public static string DecodeHexString(string hex)
+        {
+            int numberChars = hex.Length;
+            byte[] bytes = new byte[numberChars / 2];
+
+            for (int i = 0; i < numberChars; i += 2)
+                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+
+            string str;
+
+            if (bytes.Length == 1)
+                // str = Encoding.ASCII.GetString(bytes);
+                str = char.ConvertFromUtf32(bytes[0]);
+            else if (bytes.Length == 2 && bytes[0] == 0)
+                str = char.ConvertFromUtf32(bytes[1]);
+            else
+                str = Encoding.UTF8.GetString(bytes);
+
+            return str;
         }
     }
 }

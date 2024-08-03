@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/test/bin/Debug/net6.0/HL7Test.dll",
+            "program": "${workspaceFolder}/test/bin/Debug/net8.0/HL7Test.dll",
             "args": [],
             "cwd": "${workspaceFolder}/test",
             "console": "internalConsole",

@@ -2,11 +2,11 @@
   <PropertyGroup>
     <Description>Lightweight HL7 V2 library</Description>
     <Copyright>(c) Efferent Health, LLC</Copyright>
-    <VersionPrefix>3.0.2</VersionPrefix>
+    <VersionPrefix>3.0.3</VersionPrefix>
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <AssemblyName>HL7-V2</AssemblyName>
     <PackageId>HL7-V2</PackageId>
-    <PackageTags>hl7;hl7-v2;dotnet</PackageTags>
+    <PackageTags>hl7;hl7-v2;hl7-parser</PackageTags>
     <PackageProjectUrl>https://github.com/Efferent-Health/HL7-V2</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <RepositoryType>git</RepositoryType>

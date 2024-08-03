@@ -3,8 +3,6 @@ using System.IO;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Efferent.HL7.V2;
-
 namespace Efferent.HL7.V2.Test
 {
     [TestClass]
@@ -16,7 +14,7 @@ namespace Efferent.HL7.V2.Test
         public static void Main(string[] args)
         {
             // var test = new HL7Test();
-            // test.DecodedValue1();
+            // test.ParseTest1();
             // test.AddRepeatingField();
             // test.GenerateAckShortSeparatorListTest();
             // test.CustomDelimiterTest();
@@ -45,6 +43,7 @@ namespace Efferent.HL7.V2.Test
             var message = new Message(this.HL7_ORM);
 
             var isParsed = message.ParseMessage();
+
             Assert.IsTrue(isParsed);
         }
 
@@ -1006,7 +1005,7 @@ PV1|1|I|1999^2012^01||||004777^FAKES^FAKESSSS^J.|||SUR||||ADM|A0";
             Assert.IsTrue(isParsed);
         }
         
-[TestMethod]
+        [TestMethod]
         public void BypassValidationParseMessage_ShouldReturnTrue()
         {
             string sampleMessage = @"MSH|^~\&|SCA|SCA|LIS|LIS|202107300000||ORU^R01||P|2.4|||||||
@@ -1029,6 +1028,21 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             {
                 Assert.Fail("Unexpected exception", ex);
             }
+        }
+
+        [TestMethod]
+        public void SpecialCharacter()
+        {
+            string sampleMessage = @"MSH|^~\&|HELIOS|DEDALUS|||20240609213244||ADT^A01|HL7Gtw018FFE7D23AC00|P|2.5|||AL|AL|D|8859/1
+EVN|A01|||RO||20240609213200
+PID|1||5928948^^^X1V1_MPI^PI~1053251221^^^HELIOS^ANT~757HA514^^^SS^SS~WLMHLP81R56Z209U^^^NNITA^NNITA||ANONYMIZED ANONYMIZED^ANONYMIZED ANONYMIZED^^^^^^^^^^^^3||19811016|F|||V. ANTONIO BAZZINI 9&V. ANTONIO BAZZINI&9^^ANONYMIZED^^20125^^H^^015146~V. ANTONIO ANONYMIZED 9&V. ANTONIO BAZZINI&9^^ANONYMIZED^^12345^^L^^015146^030~^^SRI LANKA^^^^BDL^^999311||^PRN^PH^^^^^^^^^3279945913|||2||ANONYMIZED^MEF^NNITA|757HA514|||||||^^311^SRI LANKA (gi\X00E0\ CEYLON)||||N
+PV1|1|I|XOSTPIO^^^ICHPIO^^^^^ANONYMIZED|4|P2024126713||ANONYMIZED^ANONYMIZED^TOMMASO||||1HB^602^D02|||3|||ANONYMIZED^ANONYMIZED^ANONYMIZED||G2024005887^^^PRZ^VN|1||||||||||||||||||||||||20240609213200";
+
+            var message = new Message(sampleMessage);
+
+            var isParsed = message.ParseMessage();
+
+            Assert.IsTrue(isParsed);
         }
     }
 }
