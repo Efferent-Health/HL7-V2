@@ -8,8 +8,8 @@ namespace Efferent.HL7.V2.Test
     [TestClass]
     public class HL7Test
     {
-        private string HL7_ORM;
-        private string HL7_ADT;
+        private readonly string HL7_ORM;
+        private readonly string HL7_ADT;
 
         public static void Main(string[] args)
         {
@@ -34,7 +34,7 @@ namespace Efferent.HL7.V2.Test
             Assert.IsNotNull(message);
 
             // message.ParseMessage();
-            // File.WriteAllText("SmokeTestResult.txt", message.SerializeMessage(false));
+            // File.WriteAllText("SmokeTestResult.txt", message.SerializeMessage());
         }
 
         [TestMethod]
@@ -139,7 +139,7 @@ namespace Efferent.HL7.V2.Test
             var message = new Message(this.HL7_ADT);
             message.AddNewSegment(newSeg);
 
-            string serializedMessage = message.SerializeMessage(false);
+            string serializedMessage = message.SerializeMessage();
             Assert.AreEqual("ZIB|ZIB1||||ZIB5^^ZIB.5.3\r", serializedMessage);
         }
 
@@ -178,9 +178,9 @@ namespace Efferent.HL7.V2.Test
             var oru = new Message();
             oru.AddNewSegment(obx);
 
-            var str = oru.SerializeMessage(false);
+            var str = oru.SerializeMessage();
 
-            Assert.IsFalse(str.Contains("&"));  // Should have \T\ instead
+            Assert.IsFalse(str.Contains('&'));  // Should have \T\ instead
         }
 
         [TestMethod]
@@ -188,6 +188,7 @@ namespace Efferent.HL7.V2.Test
         {
             var enc = new HL7Encoding();
             Segment PID = new Segment("PID", enc);
+
             // Creates a new Field
             PID.AddNewField("1", 1);
 
@@ -196,7 +197,7 @@ namespace Efferent.HL7.V2.Test
 
             Message message = new Message();
             message.AddNewSegment(PID);
-            var str = message.SerializeMessage(false);
+            var str = message.SerializeMessage();
 
             Assert.AreEqual("PID|2\r", str);
         }
@@ -329,7 +330,7 @@ namespace Efferent.HL7.V2.Test
             const string sampleMessage = "MSH|^~\\&|SA|SF|RA|RF|20110613083617||ADT^A04|123|P|2.7||||\r\nEVN|A04|20110613083617||\"\"\r\n";
             var message = new Message(sampleMessage);
             message.ParseMessage();
-            var serialized = message.SerializeMessage(false);
+            var serialized = message.SerializeMessage();
             Assert.AreEqual(sampleMessage, serialized);
         }
 
@@ -353,7 +354,7 @@ namespace Efferent.HL7.V2.Test
             const string sampleMessage = "MSH|^~\\&|SA|SF|RA|RF|20110613083617||ADT^A04|123|P|2.7||||\r\nPID\r\nEVN|A04|20110613083617||\"\"\r\n";
             var message = new Message(sampleMessage);
             message.ParseMessage();
-            var serialized = message.SerializeMessage(false);
+            var serialized = message.SerializeMessage();
             Assert.AreEqual(sampleMessage, serialized);
         }
 
@@ -363,7 +364,7 @@ namespace Efferent.HL7.V2.Test
             const string sampleMessage = "MSH|^~\\&|Sending\tApplication|Sending\tFacility|RA|RF|20110613083617||ADT^A04|123|P|2.7||||\r\nEVN|A04|20110613083617\r\n";
             var message = new Message(sampleMessage);
             message.ParseMessage();
-            var serialized = message.SerializeMessage(false);
+            var serialized = message.SerializeMessage();
             Assert.AreEqual(sampleMessage, serialized);
         }
 
@@ -487,7 +488,7 @@ ZZ1|1|139378|20201230100000|ghg^ghgh-HA||s1^OP-Saal 1|gh^gjhg 1|ghg^ghjg-HA|BSV 
             var message = new Message(sampleMessage);
             message.ParseMessage();
 
-            string serializedMessage = message.SerializeMessage(false);
+            string serializedMessage = message.SerializeMessage();
         }
 
         [TestMethod]
@@ -506,7 +507,7 @@ ZZ1|1|139378|20201230100000|ghg^ghgh-HA||s1^OP-Saal 1|gh^gjhg 1|ghg^ghjg-HA|BSV 
             message.Encoding = encoding;
             message.AddSegmentMSH("FIRST", "SECOND", "THIRD", "FOURTH",
                 "FIFTH", "ORU2R05F5", "SIXTH", "SEVENTH", "2.8");
-            var result = message.SerializeMessage(false);
+            var result = message.SerializeMessage();
 
             Assert.AreEqual("MSH124531FIRST1SECOND1", result.Substring(0, 22));
         }
@@ -602,7 +603,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
             orcSegment.Fields(12).RemoveEmptyTrailingComponents();
             message.AddNewSegment(orcSegment);
 
-            string serializedMessage = message.SerializeMessage(false);
+            string serializedMessage = message.SerializeMessage();
             Assert.AreEqual(orcSegment.Fields(12).Components().Count, 5);
             Assert.AreEqual("ORC||||||||||||should not be removed^should not be removed^should not be removed^^should not be removed\r", serializedMessage);
         }
@@ -627,7 +628,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
             orcSegment.Fields(12).RemoveEmptyTrailingComponents();
             message.AddNewSegment(orcSegment);
 
-            string serializedMessage = message.SerializeMessage(false);
+            string serializedMessage = message.SerializeMessage();
             Assert.AreEqual(orcSegment.Fields(12).Components().Count, 0);
             Assert.AreEqual("ORC||||||||||||\r", serializedMessage);
         }
@@ -651,7 +652,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
 
             Message message = new Message();
             message.AddNewSegment(PID);
-            var str = message.SerializeMessage(false);
+            var str = message.SerializeMessage();
 
             Assert.AreEqual("PID|A~B\r", str);
         }
@@ -671,7 +672,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
 
                 Assert.IsNull(msg.MessageControlID, "MessageControlID should be null");
 
-                //just to make sure we have actually parsed the invalid MSH
+                // Just make sure we have actually parsed the invalid MSH
                 string messageType = msg.GetValue("MSH.9");
                 Assert.AreEqual("ORU^R01", messageType, "Unexpected Message Type");
             }
@@ -952,7 +953,7 @@ MSA|AA|9B38584D|Double encoded value: \E\T\E\|";
             var isParsed = message.ParseMessage();
 
             Assert.IsTrue(isParsed);
-            Assert.IsTrue(message.GetValue("MSA.3").EndsWith("&"));
+            Assert.IsTrue(message.GetValue("MSA.3").EndsWith('&'));
         }
 
         [TestMethod]

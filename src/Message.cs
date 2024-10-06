@@ -22,7 +22,7 @@ namespace Efferent.HL7.V2
         public int SegmentCount { get; set; }
         public HL7Encoding Encoding { get; set; } = new HL7Encoding();
 
-        private static readonly char[] _queryDelimiter = { '.' };
+        private static readonly char[] _queryDelimiter = ['.'];
 
         private const string segmentRegex = @"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$";
         private const string fieldRegex = @"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$";
@@ -61,14 +61,16 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Parse the HL7 message in text format, throws HL7Exception if error occurs
+        /// Parse the HL7 message in text format
         /// </summary>
-        /// <param name="bypassValidation">To parse the message without any validation</param>
+        /// <param name="bypassValidation">To parse the message without any validation.</param>
+        /// <remarks>Do not use for new messages or messages with added segemnts</remarks>
+        /// <exception cref="HL7Exception">Error when parsing the message</exception>
         /// <returns>boolean</returns>
         public bool ParseMessage(bool bypassValidation = false)
         {
-            bool isValid = false;
             bool isParsed = false;
+            bool isValid;
 
             try
             {
@@ -126,6 +128,7 @@ namespace Efferent.HL7.V2
                     if (!string.IsNullOrEmpty(strSerializedMessage))
                     {
                         this.Encoding.EvaluateSegmentDelimiter(this.HL7Message);
+
                         if (this.Equals(strSerializedMessage))
                             isParsed = true;
                     }
@@ -147,8 +150,10 @@ namespace Efferent.HL7.V2
         /// Serialize the message in text format
         /// </summary>
         /// <param name="validate">Validate the message before serializing</param>
+        /// <remarks>Only use true in when serializing a previously existing message</remarks>
+        /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
         /// <returns>string with HL7 message</returns>
-        public string SerializeMessage(bool validate)
+        public string SerializeMessage(bool validate = false)
         {
             if (validate && !this.validateMessage())
                 throw new HL7Exception("Failed to validate the updated message", HL7Exception.BadMessage);
@@ -220,16 +225,16 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Get the Value of specific Field/Component/SubComponent, throws error if field/component index is not valid
+        /// Get the Value of specific Field/Component/SubComponent
         /// </summary>
         /// <param name="strValueFormat">Field/Component position in format SEGMENTNAME.FieldIndex.ComponentIndex.SubComponentIndex example PID.5.2</param>
+        /// <exception cref="HL7Exception">Error if field/component index is not valid</exception>
         /// <returns>Value of specified field/component/subcomponent</returns>
         public string GetValue(string strValueFormat)
         {
-            string segmentName = string.Empty;
+            string segmentName;
             int segmentOccurrence = 0;
-            int componentIndex = 0;
-            int subComponentIndex = 0;
+            int componentIndex;
             string strValue = string.Empty;
 
             var allComponents = strValueFormat.Split(_queryDelimiter);
@@ -238,7 +243,7 @@ namespace Efferent.HL7.V2
 
             if (isValid)
             {
-                var matches = System.Text.RegularExpressions.Regex.Matches(allComponents[0], segmentRegex);
+                var matches = Regex.Matches(allComponents[0], segmentRegex);
 
                 if (matches.Count < 1)
                     throw new HL7Exception("Request format is not valid: " + strValueFormat);
@@ -259,7 +264,7 @@ namespace Efferent.HL7.V2
                     {
                         if (Int32.TryParse(allComponents[2], out componentIndex))
                         {
-                            if (Int32.TryParse(allComponents[3], out subComponentIndex))
+                            if (Int32.TryParse(allComponents[3], out int subComponentIndex))
                             {
                                 try
                                 {
@@ -326,17 +331,17 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Sets the Value of specific Field/Component/SubComponent in matching Segments, throws error if field/component index is not valid
+        /// Sets the Value of specific Field/Component/SubComponent in matching Segments
         /// </summary>
         /// <param name="strValueFormat">Field/Component position in format SEGMENTNAME.FieldIndex.ComponentIndex.SubComponentIndex example PID.5.2</param>
         /// <param name="strValue">Value for the specified field/component</param>
+        /// <exception cref="HL7Exception">Error if field/component index is not valid</exception>
         /// <returns>boolean</returns>
         public bool SetValue(string strValueFormat, string strValue)
         {
             bool isSet = false;
-            string segmentName = string.Empty;
-            int componentIndex = 0;
-            int subComponentIndex = 0;
+            string segmentName;
+            int componentIndex;
             var allComponents = strValueFormat.Split(_queryDelimiter);
             int comCount = allComponents.Length;
             bool isValid = validateValueFormat(allComponents);
@@ -353,7 +358,7 @@ namespace Efferent.HL7.V2
                         {
                             if (Int32.TryParse(allComponents[2], out componentIndex))
                             {
-                                if (Int32.TryParse(allComponents[3], out subComponentIndex))
+                                if (Int32.TryParse(allComponents[3], out int subComponentIndex))
                                 {
                                     try
                                     {
@@ -420,13 +425,14 @@ namespace Efferent.HL7.V2
         /// Checks if specified field has components
         /// </summary>
         /// <param name="strValueFormat">Field/Component position in format SEGMENTNAME.FieldIndex.ComponentIndex.SubComponentIndex example PID.5.2</param>
+        /// <exception cref="HL7Exception">Error if field/component index is not valid</exception>
         /// <returns>boolean</returns>
         public bool IsComponentized(string strValueFormat)
         {
-            bool isComponentized = false;
             var allComponents = strValueFormat.Split(_queryDelimiter);
             int comCount = allComponents.Length;
             bool isValid = validateValueFormat(allComponents);
+            bool isComponentized;
 
             if (isValid)
             {
@@ -463,6 +469,7 @@ namespace Efferent.HL7.V2
         /// Checks if specified fields has repetitions
         /// </summary>
         /// <param name="strValueFormat">Field/Component position in format SEGMENTNAME.FieldIndex.ComponentIndex.SubComponentIndex example PID.5.2</param>
+        /// <exception cref="HL7Exception">Error if field/component index is not valid</exception>
         /// <returns>boolean</returns>
         public bool HasRepetitions(string strValueFormat)
         {
@@ -502,19 +509,18 @@ namespace Efferent.HL7.V2
         /// Checks if specified component has sub components
         /// </summary>
         /// <param name="strValueFormat">Field/Component position in format SEGMENTNAME.FieldIndex.ComponentIndex.SubComponentIndex example PID.5.2</param>
+        /// <exception cref="HL7Exception">Error if field/component index is not valid</exception>
         /// <returns>boolean</returns>
         public bool IsSubComponentized(string strValueFormat)
         {
             bool isSubComponentized = false;
-            string segmentName = string.Empty;
-            int componentIndex = 0;
             var allComponents = strValueFormat.Split(_queryDelimiter);
             int comCount = allComponents.Length;
             bool isValid = validateValueFormat(allComponents);
 
             if (isValid)
             {
-                segmentName = allComponents[0];
+                string segmentName = allComponents[0];
 
                 if (comCount >= 3)
                 {
@@ -523,7 +529,7 @@ namespace Efferent.HL7.V2
                         var segment = SegmentList[segmentName].First();
                         var field = getField(segment, allComponents[1]);
 
-                        if (Int32.TryParse(allComponents[2], out componentIndex))
+                        if (Int32.TryParse(allComponents[2], out int componentIndex))
                             isSubComponentized = field.ComponentList[componentIndex - 1].IsSubComponentized;
                     }
                     catch (Exception ex)
@@ -570,6 +576,7 @@ namespace Efferent.HL7.V2
         /// Adds a segment to the message
         /// </summary>
         /// <param name="newSegment">Segment to be appended to the end of the message</param>
+        /// <exception cref="HL7Exception">Error if cannot add the new segment</exception>
         /// <returns>True if added successfully, otherwise false</returns>
         public bool AddNewSegment(Segment newSegment)
         {
@@ -595,6 +602,7 @@ namespace Efferent.HL7.V2
         /// </summary>
         /// <param name="segmentName">Segment to be removed</param>
         /// <param name="index">Zero-based index of the segment to be removed, in case of multiple. Default is 0.</param>
+        /// <exception cref="HL7Exception">Error if cannot find or remove the new segment</exception>
         /// <returns>True if found and removed successfully, otherwise false</returns>
         public bool RemoveSegment(string segmentName, int index = 0)
         {
@@ -615,7 +623,7 @@ namespace Efferent.HL7.V2
             }
             catch (Exception ex)
             {
-                throw new HL7Exception("Unable to add remove segment. Error - " + ex.Message, ex);
+                throw new HL7Exception("Unable to remove segment. Error - " + ex.Message, ex);
             }
         }
 
@@ -783,7 +791,8 @@ namespace Efferent.HL7.V2
         /// <summary>
         /// Validates the HL7 message for basic syntax
         /// </summary>
-        /// <returns>A boolean indicating whether the whole message is valid or not</returns>
+        /// <exception cref="HL7Exception">Throws an exception on any validation issue</exception>
+        /// <returns>Only returns true in validation is successful, otherwise will throw an exception</returns>
         private bool validateMessage()
         {
             try
@@ -812,7 +821,7 @@ namespace Efferent.HL7.V2
                             continue;
 
                         string segmentName = strSegment.Substring(0, 3);
-                        bool isValidSegmentName = System.Text.RegularExpressions.Regex.IsMatch(segmentName, segmentRegex);
+                        bool isValidSegmentName = Regex.IsMatch(segmentName, segmentRegex);
 
                         if (!isValidSegmentName)
                             throw new HL7Exception("Invalid segment name found: " + strSegment, HL7Exception.BadMessage);

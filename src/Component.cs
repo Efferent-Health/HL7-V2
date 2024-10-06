@@ -30,7 +30,7 @@ namespace Efferent.HL7.V2
             string[] allSubComponents;
 
             if (this.isDelimiter)
-                allSubComponents = new[] { this.Value };
+                allSubComponents = [this.Value];
             else
                 allSubComponents = _value.Split(this.Encoding.SubComponentDelimiter);
 
@@ -49,7 +49,7 @@ namespace Efferent.HL7.V2
 
         public SubComponent SubComponents(int position)
         {
-            position = position - 1;
+            position--;
 
             try
             {

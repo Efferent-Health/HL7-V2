@@ -22,7 +22,7 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// add field at next position
+        /// Add field at next position
         /// </summary>
         /// <param name="field">Field</param>
         internal new void Add(Field field)

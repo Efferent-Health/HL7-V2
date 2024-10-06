@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Efferent.HL7.V2
 {
@@ -19,7 +18,7 @@ namespace Efferent.HL7.V2
             get
             {
                 if (_RepetitionList == null)
-                    _RepetitionList = new List<Field>();
+                    _RepetitionList = [];
                     
                 return _RepetitionList;
             }
@@ -76,13 +75,13 @@ namespace Efferent.HL7.V2
 
         public Field(HL7Encoding encoding)
         {
-            this.ComponentList = new ComponentCollection();
+            this.ComponentList = [];
             this.Encoding = encoding;
         }
 
         public Field(string value, HL7Encoding encoding)
         {
-            this.ComponentList = new ComponentCollection();
+            this.ComponentList = [];
             this.Encoding = encoding;
             this.Value = value;
         }
@@ -115,7 +114,7 @@ namespace Efferent.HL7.V2
 
         public Component Components(int position)
         {
-            position = position - 1;
+            position--;
 
             try
             {
@@ -174,7 +173,7 @@ namespace Efferent.HL7.V2
                 throw new HL7Exception("Repeating field must have repetitions (HasRepetitions = true)");
 
             if (_RepetitionList == null) 
-                _RepetitionList = new List<Field>(); 
+                _RepetitionList = []; 
 
             _RepetitionList.Add(field);
         }

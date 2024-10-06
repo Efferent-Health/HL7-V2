@@ -109,8 +109,8 @@ namespace Efferent.HL7.V2
             buffer[0] = 11; // VT
 
             Array.Copy(data, 0, buffer, 1, data.Length);
-            buffer[buffer.Length - 2] = 28; // FS
-            buffer[buffer.Length - 1] = 13; // CR
+            buffer[^2] = 28; // FS
+            buffer[^1] = 13; // CR
 
             return buffer;
         }

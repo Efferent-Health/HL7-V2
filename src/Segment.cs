@@ -88,7 +88,7 @@ namespace Efferent.HL7.V2
                 }
                 else 
                 {
-                    position = position - 1;
+                    position--;
                     this.FieldList.Add(field, position);
                 }
                 
@@ -102,7 +102,7 @@ namespace Efferent.HL7.V2
 
         public Field Fields(int position)
         {
-            position = position - 1;
+            position--;
 
             try
             {
