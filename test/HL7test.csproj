@@ -7,6 +7,7 @@
     <PackageId>HL7Test</PackageId>
     <OutputType>exe</OutputType>
     <StartupObject>Efferent.HL7.V2.Test.HL7Test</StartupObject>
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

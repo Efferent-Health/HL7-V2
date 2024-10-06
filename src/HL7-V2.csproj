@@ -13,6 +13,7 @@
     <RepositoryUrl>https://github.com/Efferent-Health/HL7-V2</RepositoryUrl>
     <Configuration>Release</Configuration>
     <Optimize>true</Optimize>
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
