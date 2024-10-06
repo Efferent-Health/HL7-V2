@@ -43,7 +43,7 @@ namespace Efferent.HL7.V2
                 return;
             }
 
-            this.HasRepetitions = _value.Contains(this.Encoding.RepeatDelimiter);
+            this.HasRepetitions = _value.Contains(this.Encoding.RepeatDelimiter.ToString());
 
             if (this.HasRepetitions)
             {
