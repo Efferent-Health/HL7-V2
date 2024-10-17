@@ -763,7 +763,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             message.ParseMessage();
 
             message.SetValue(strValueFormat, newPatientId);
-            
+
             Assert.AreEqual(newPatientId, message.GetValue(strValueFormat));
             Assert.AreEqual("454721", message.GetValue(unchangedValuePath));
         }
@@ -802,16 +802,16 @@ OBX|1|TX|SCADOCTOR||^||||||F";
 
             var invalidRequest = Assert.ThrowsException<HL7Exception>(() => message.SetValue(string.Empty, testValue));
             Assert.IsTrue(invalidRequest.Message.Contains("Request format"), "Should have thrown exception because of invalid request format");
-            
+
             var unavailableSegment = Assert.ThrowsException<HL7Exception>(() => message.SetValue("OBX.1", testValue));
             Assert.IsTrue(unavailableSegment.Message.Contains("Segment name"), "Should have thrown exception because of unavailable Segment");
-            
+
             var segmentLevel = Assert.ThrowsException<HL7Exception>(() => message.SetValue("PID.30", testValue));
             Assert.IsTrue(segmentLevel.Message.Contains("Field not available"), "Should have thrown exception because of unavailable Field");
-            
+
             var componentLevel = Assert.ThrowsException<HL7Exception>(() => message.SetValue("PID.3.7", testValue));
             Assert.IsTrue(componentLevel.Message.Contains("Component not available"), "Should have thrown exception because of unavailable Component");
-            
+
             var subComponentLevel = Assert.ThrowsException<HL7Exception>(() => message.SetValue("PID.3.1.2", testValue));
             Assert.IsTrue(subComponentLevel.Message.Contains("SubComponent not available"), "Should have thrown exception because of unavailable SubComponent");
         }
@@ -825,10 +825,10 @@ OBX|1|TX|SCADOCTOR||^||||||F";
 
             Assert.IsTrue(message.SetValue("PID.1", testValue), "Should have successfully set value of Field");
             Assert.AreEqual(testValue, message.GetValue("PID.1"));
-            
+
             Assert.IsTrue(message.SetValue("PID.2.2", testValue), "Should have successfully set value of Component");
             Assert.AreEqual(testValue, message.GetValue("PID.2.2"));
-            
+
             Assert.IsTrue(message.SetValue("PID.2.4.1", testValue), "Should have successfully set value of SubComponent");
             Assert.AreEqual(testValue, message.GetValue("PID.2.4.1"));
         }
@@ -883,7 +883,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             message.ParseMessage();
 
             Assert.IsFalse(message.HasRepetitions("PID.3"));
-            Assert.IsTrue(message.HasRepetitions("PID.18")); 
+            Assert.IsTrue(message.HasRepetitions("PID.18"));
         }
 
         [TestMethod]
@@ -971,7 +971,7 @@ PV1|1|I|2000^2012^01||||004777^CASTRO^FRANK^J.|||SUR||||ADM|A0";
             Assert.IsTrue(isParsed);
         }
 
-       [TestMethod]
+        [TestMethod]
         public void DecodeBrokenCharMessage()
         {
             var sampleMessage = @"MSH|^~\&|ADT1|MCM|FINGER|MCM|198808181126|SECURITY|ADT^A01|MSG00001|P|2.3.1
@@ -1005,7 +1005,7 @@ PV1|1|I|1999^2012^01||||004777^FAKES^FAKESSSS^J.|||SUR||||ADM|A0";
             var isParsed = message.ParseMessage();
             Assert.IsTrue(isParsed);
         }
-        
+
         [TestMethod]
         public void BypassValidationParseMessage_ShouldReturnTrue()
         {
@@ -1044,6 +1044,48 @@ PV1|1|I|XOSTPIO^^^ICHPIO^^^^^ANONYMIZED|4|P2024126713||ANONYMIZED^ANONYMIZED^TOM
             var isParsed = message.ParseMessage();
 
             Assert.IsTrue(isParsed);
+        }
+
+        [TestMethod]
+        public void SerializeMessageCustomEncoding()
+        {
+            var encoding = new HL7Encoding();
+            encoding.FieldDelimiter = '*';
+
+            var message = new Message();
+
+            Segment HL = new("HL", encoding);
+            HL.AddNewField("1");
+            HL.AddEmptyField();
+            message.AddNewSegment(HL);
+
+            encoding = new HL7Encoding();
+            encoding.FieldDelimiter = '^';
+            Segment ZZY = new("ZZY", encoding);
+            ZZY.AddNewField("1");
+            ZZY.AddEmptyField();
+
+            message.AddNewSegment(ZZY);
+
+            var serializedMessage = message.SerializeMessage();
+            Assert.AreEqual("HL*1*\rZZY^1^\r", serializedMessage);
+        }
+
+        [TestMethod]
+        public void SerializeMessageDefaultEncoding()
+        {
+            var encoding = new HL7Encoding();
+
+            var message = new Message();
+
+            Segment HL = new("HL", encoding);
+            HL.AddNewField("1");
+            HL.AddEmptyField();
+
+            message.AddNewSegment(HL);
+
+            var serializedMessage = message.SerializeMessage();
+            Assert.AreEqual("HL|1|\r", serializedMessage);
         }
     }
 }

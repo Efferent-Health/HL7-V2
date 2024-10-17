@@ -161,6 +161,7 @@ namespace Efferent.HL7.V2
             var strMessage = new StringBuilder();
             string currentSegName = string.Empty;
             List<Segment> _segListOrdered = getAllSegmentsInOrder();
+            HL7Encoding segmentEncoding;
 
             try
             {
@@ -168,18 +169,19 @@ namespace Efferent.HL7.V2
                 {
                     foreach (Segment seg in _segListOrdered)
                     {
+                        segmentEncoding = seg.Encoding;
                         currentSegName = seg.Name;
                         strMessage.Append(seg.Name);
 
                         if (seg.FieldList.Count > 0)
-                            strMessage.Append(Encoding.FieldDelimiter);
+                            strMessage.Append(segmentEncoding.FieldDelimiter);
 
                         int startField = currentSegName == "MSH" ? 1 : 0;
 
                         for (int i = startField; i<seg.FieldList.Count; i++)
                         {
                             if (i > startField)
-                                strMessage.Append(Encoding.FieldDelimiter);
+                                strMessage.Append(segmentEncoding.FieldDelimiter);
 
                             var field = seg.FieldList[i];
 
@@ -194,7 +196,7 @@ namespace Efferent.HL7.V2
                                 for (int j = 0; j < field.RepetitionList.Count; j++)
                                 {
                                     if (j > 0)
-                                        strMessage.Append(Encoding.RepeatDelimiter);
+                                        strMessage.Append(segmentEncoding.RepeatDelimiter);
 
                                     serializeField(field.RepetitionList[j], strMessage);
                                 }
@@ -205,7 +207,7 @@ namespace Efferent.HL7.V2
                             }
                         }
 
-                        strMessage.Append(Encoding.SegmentDelimiter);
+                        strMessage.Append(segmentEncoding.SegmentDelimiter);
                     }
                 }
                 catch (Exception ex)
