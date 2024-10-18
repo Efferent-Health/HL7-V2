@@ -580,7 +580,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
         {
             var message = new Message();
 
-            var orcSegment = new Segment("ORC", new HL7Encoding());
+            var orcSegment = new Segment("ORC", message.Encoding);
             for (int eachField = 1; eachField <= 12; eachField++)
             {
                 orcSegment.AddEmptyField();
@@ -588,7 +588,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
 
             for (int eachComponent = 1; eachComponent < 8; eachComponent++)
             {
-                orcSegment.Fields(12).AddNewComponent(new Component(new HL7Encoding()));
+                orcSegment.Fields(12).AddNewComponent(new Component(message.Encoding));
             }
 
             orcSegment.Fields(12).Components(1).Value = "should not be removed";
@@ -613,7 +613,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
         {
             var message = new Message();
 
-            var orcSegment = new Segment("ORC", new HL7Encoding());
+            var orcSegment = new Segment("ORC", message.Encoding);
             for (int eachField = 1; eachField <= 12; eachField++)
             {
                 orcSegment.AddEmptyField();
@@ -621,7 +621,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
 
             for (int eachComponent = 1; eachComponent < 8; eachComponent++)
             {
-                orcSegment.Fields(12).AddNewComponent(new Component(new HL7Encoding()));
+                orcSegment.Fields(12).AddNewComponent(new Component(message.Encoding));
                 orcSegment.Fields(12).Components(eachComponent).Value = string.Empty;
             }
 
