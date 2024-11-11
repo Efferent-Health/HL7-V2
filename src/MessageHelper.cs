@@ -57,7 +57,7 @@ namespace Efferent.HL7.V2
 
         public static DateTime? ParseDateTime(string dateTimeString, out TimeSpan offset, bool throwExeption = false)
         {
-            var expr = @"^\s*((?:19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$";
+            var expr = @"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$";
             var matches = Regex.Matches(dateTimeString, expr, RegexOptions.Singleline);
 
             offset = new TimeSpan();
