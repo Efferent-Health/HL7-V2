@@ -159,62 +159,11 @@ namespace Efferent.HL7.V2
                 throw new HL7Exception("Failed to validate the updated message", HL7Exception.BadMessage);
 
             var strMessage = new StringBuilder();
-            string currentSegName = string.Empty;
             List<Segment> _segListOrdered = getAllSegmentsInOrder();
 
             try
             {
-                try
-                {
-                    foreach (Segment seg in _segListOrdered)
-                    {
-                        currentSegName = seg.Name;
-                        strMessage.Append(seg.Name);
-
-                        if (seg.FieldList.Count > 0)
-                            strMessage.Append(Encoding.FieldDelimiter);
-
-                        int startField = currentSegName == "MSH" ? 1 : 0;
-
-                        for (int i = startField; i<seg.FieldList.Count; i++)
-                        {
-                            if (i > startField)
-                                strMessage.Append(Encoding.FieldDelimiter);
-
-                            var field = seg.FieldList[i];
-
-                            if (field.IsDelimitersField)
-                            {
-                                strMessage.Append(field.UndecodedValue);
-                                continue;
-                            }
-
-                            if (field.HasRepetitions)
-                            {
-                                for (int j = 0; j < field.RepetitionList.Count; j++)
-                                {
-                                    if (j > 0)
-                                        strMessage.Append(Encoding.RepeatDelimiter);
-
-                                    serializeField(field.RepetitionList[j], strMessage);
-                                }
-                            }
-                            else
-                            {
-                                serializeField(field, strMessage);
-                            }
-                        }
-
-                        strMessage.Append(Encoding.SegmentDelimiter);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (currentSegName == "MSH")
-                        throw new HL7Exception("Failed to serialize the MSH segment with error - " + ex.Message, HL7Exception.SerializationError, ex);
-                    else
-                        throw;
-                }
+                _segListOrdered.ForEach(seg => seg.SerializeSegment(strMessage));
 
                 return strMessage.ToString();
             }
@@ -908,35 +857,6 @@ namespace Efferent.HL7.V2
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Serializes a field into a string with proper encoding
-        /// </summary>
-        /// <returns>A serialized string</returns>
-        private void serializeField(Field field, StringBuilder strMessage)
-        {
-            if (field.ComponentList.Count > 0)
-            {
-                int indexCom = 0;
-
-                foreach (Component com in field.ComponentList)
-                {
-                    indexCom++;
-
-                    if (com.SubComponentList.Count > 0)
-                        strMessage.Append(string.Join(Encoding.SubComponentDelimiter.ToString(), com.SubComponentList.Select(sc => Encoding.Encode(sc.Value))));
-                    else
-                        strMessage.Append(Encoding.Encode(com.Value));
-
-                    if (indexCom < field.ComponentList.Count)
-                        strMessage.Append(Encoding.ComponentDelimiter);
-                }
-            }
-            else
-            {
-                strMessage.Append(Encoding.Encode(field.Value));
-            }
         }
 
         /// <summary>

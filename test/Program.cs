@@ -14,10 +14,7 @@ namespace Efferent.HL7.V2.Test
         public static void Main(string[] args)
         {
             // var test = new HL7Test();
-            // test.ParseTest1();
-            // test.AddRepeatingField();
-            // test.GenerateAckShortSeparatorListTest();
-            // test.CustomDelimiterTest();
+            // test.CloneMessageWithNewline();
         }
 
         public HL7Test()
@@ -1044,6 +1041,26 @@ PV1|1|I|XOSTPIO^^^ICHPIO^^^^^ANONYMIZED|4|P2024126713||ANONYMIZED^ANONYMIZED^TOM
             var isParsed = message.ParseMessage();
 
             Assert.IsTrue(isParsed);
+        }
+
+        [TestMethod]
+        public void CloneMessageWithNewline()
+        {
+            string sampleMessage = @"MSH|^~\&|ATHENANET|18802555^Orthopaedic Sample Org|Aspyra - 18802555|13274090^ORTHOPAEDIC INSTITUTE|20241119113500||ORM^O01|57492555M18802|P|2.5.1||||||||
+PID||500036547^^^Enterprise ID||500036547^^^Patient ID|JOHN^DOE^||20050904|M||2106-3|1380 SAMPLE STREET^\X0A\^NEW YORK^NY^55755-5055||(555)261-2203|||S||^^^||||2186-5||||||||
+PV1||O|80D18802^^^SAMPLE ORTHO URGENT CARE||||1905555652^JANE^D^DOE||||||||||1037^ABCDE8|||||||||||||||||||||||||||20241119||||||||";
+
+            var message = new Message(sampleMessage);
+            message.ParseMessage();
+
+            var message2 = new Message();
+
+            foreach (var segment in message.Segments())
+            {
+                message2.AddNewSegment(segment.DeepCopy());
+            }
+
+            Assert.IsTrue(message2.GetValue("PID.11").IndexOf('\n') > 1);
         }
     }
 }

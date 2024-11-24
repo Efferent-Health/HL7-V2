@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Efferent.HL7.V2
 {
@@ -176,6 +178,35 @@ namespace Efferent.HL7.V2
                 _RepetitionList = []; 
 
             _RepetitionList.Add(field);
+        }
+
+        /// <summary>
+        /// Serializes a field into a string with proper encoding
+        /// </summary>
+        /// <param name="strMessage">A StringBuilder to write on</param>
+        public void SerializeField(StringBuilder strMessage)
+        {
+            if (this.ComponentList.Count > 0)
+            {
+                int indexCom = 0;
+
+                foreach (Component com in this.ComponentList)
+                {
+                    indexCom++;
+
+                    if (com.SubComponentList.Count > 0)
+                        strMessage.Append(string.Join(Encoding.SubComponentDelimiter.ToString(), com.SubComponentList.Select(sc => Encoding.Encode(sc.Value))));
+                    else
+                        strMessage.Append(Encoding.Encode(com.Value));
+
+                    if (indexCom < this.ComponentList.Count)
+                        strMessage.Append(Encoding.ComponentDelimiter);
+                }
+            }
+            else
+            {
+                strMessage.Append(Encoding.Encode(this.Value));
+            }
         }
     }
 }

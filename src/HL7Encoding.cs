@@ -64,7 +64,7 @@ namespace Efferent.HL7.V2
             if (val == null)
                 return PresentButNull;
 
-            if (string.IsNullOrWhiteSpace(val))
+            if (val.Length == 0)
                 return val;
 
             // If there's nothing that needs encoding, just return the value as-is

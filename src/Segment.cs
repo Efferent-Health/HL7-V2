@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Efferent.HL7.V2
 {
@@ -7,7 +8,7 @@ namespace Efferent.HL7.V2
     {
         internal FieldCollection FieldList { get; set; }
         internal int SequenceNo { get; set; }
-                
+
         public string Name { get; set; }
 
         public Segment(HL7Encoding encoding)
@@ -26,11 +27,11 @@ namespace Efferent.HL7.V2
         protected override void ProcessValue()
         {
             var allFields = _value.Split(this.Encoding.FieldDelimiter);
-            
+
             for (int i = 1; i < allFields.Length; i++)
             {
                 string strField = allFields[i];
-                Field field = new Field(this.Encoding);   
+                Field field = new Field(this.Encoding);
 
                 if (Name == "MSH" && i == 1)
                     field.IsDelimitersField = true; // special case
@@ -45,16 +46,16 @@ namespace Efferent.HL7.V2
                 field1.IsDelimitersField = true;
                 field1.Value = this.Encoding.FieldDelimiter.ToString();
 
-                this.FieldList.Insert(0,field1);
+                this.FieldList.Insert(0, field1);
             }
         }
 
         public Segment DeepCopy()
         {
             var newSegment = new Segment(this.Name, this.Encoding);
-            newSegment.Value = this.Value; 
+            newSegment.Value = this.Value;
 
-            return newSegment;        
+            return newSegment;
         }
 
         public void AddEmptyField()
@@ -86,12 +87,12 @@ namespace Efferent.HL7.V2
                 {
                     this.FieldList.Add(field);
                 }
-                else 
+                else
                 {
                     position--;
                     this.FieldList.Add(field, position);
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -122,6 +123,51 @@ namespace Efferent.HL7.V2
         public int GetSequenceNo()
         {
             return this.SequenceNo;
+        }
+
+        /// <summary>
+        /// Serializes a segment into a string with proper encoding
+        /// </summary>
+        /// <param name="strMessage">A StringBuilder to write on</param>
+        public void SerializeSegment(StringBuilder strMessage)
+        {
+            strMessage.Append(this.Name);
+
+            if (this.FieldList.Count > 0)
+                strMessage.Append(Encoding.FieldDelimiter);
+
+            int startField = this.Name == "MSH" ? 1 : 0;
+
+            for (int i = startField; i < this.FieldList.Count; i++)
+            {
+                if (i > startField)
+                    strMessage.Append(Encoding.FieldDelimiter);
+
+                var field = this.FieldList[i];
+
+                if (field.IsDelimitersField)
+                {
+                    strMessage.Append(field.UndecodedValue);
+                    continue;
+                }
+
+                if (field.HasRepetitions)
+                {
+                    for (int j = 0; j < field.RepetitionList.Count; j++)
+                    {
+                        if (j > 0)
+                            strMessage.Append(Encoding.RepeatDelimiter);
+
+                        field.RepetitionList[j].SerializeField(strMessage);
+                    }
+                }
+                else
+                {
+                    field.SerializeField(strMessage);
+                }
+            }
+
+            strMessage.Append(Encoding.SegmentDelimiter);
         }
     }
 }
