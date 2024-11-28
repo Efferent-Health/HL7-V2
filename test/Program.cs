@@ -460,7 +460,27 @@ namespace Efferent.HL7.V2.Test
             {
             }
         }
+        
+        [DataTestMethod]
+        [DataRow("18151231")]
+        [DataRow("19151231")]
+        [DataRow("20151231")]
+        public void ParseDateTime_Year(string dateTimeString)
+        {
+            var date = MessageHelper.ParseDateTime(dateTimeString);
+            Assert.IsNotNull(date);
+        }
 
+        [DataTestMethod]
+        [DataRow("1701231")]
+        [DataRow("16151231")]
+        [DataRow("00001231")]
+        public void ParseDateTime_Year_Negative(string dateTimeString)
+        {
+            var date = MessageHelper.ParseDateTime(dateTimeString);
+            Assert.IsNull(date);
+        }
+        
         [TestMethod]
         public void GetValueTest()
         {
