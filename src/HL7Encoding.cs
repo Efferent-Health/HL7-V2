@@ -196,7 +196,9 @@ namespace Efferent.HL7.V2
                 {
                     // throw new HL7Exception("Invalid escape sequence in HL7 string");
                     result.Append(this.EscapeCharacter);
-                    result.Append(encodedValue[i]);
+
+                    if (i<encodedValue.Length)
+                        result.Append(encodedValue[i]);
                     continue;
                 }
 

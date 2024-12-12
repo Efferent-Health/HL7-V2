@@ -10,6 +10,7 @@ namespace Efferent.HL7.V2.Test
     {
         private readonly string HL7_ORM;
         private readonly string HL7_ADT;
+        public TestContext TestContext { get; set; }
 
         public static void Main(string[] args)
         {
@@ -1061,6 +1062,23 @@ PV1|1|I|XOSTPIO^^^ICHPIO^^^^^ANONYMIZED|4|P2024126713||ANONYMIZED^ANONYMIZED^TOM
             var isParsed = message.ParseMessage();
 
             Assert.IsTrue(isParsed);
+        }
+
+        [TestMethod]
+        public void TrailingBackSlash()
+        {
+            string sampleMessage = @"MSH|^~\&|SendingApp|SendingFac|ReceivingApp|ReceivingFac|20241206123456||ADT^A01|123456|P|2.5.1
+PID|1|1234|1234||JOHN^DOE||19000101||||||||||||||
+OBR|1|1234|1234||||20210708|||||||||||||||20210708||||||||||
+OBX|36|TX|^^^^^|| OTHER: Right medial orbital wall fracture noted\";
+
+            var message = new Message(sampleMessage);
+            message.ParseMessage(true);
+
+            var strMessage = message.SerializeMessage();
+
+            Assert.IsTrue(strMessage.EndsWith("\\E\\\r\n"));
+            TestContext.WriteLine(strMessage);
         }
 
         [TestMethod]
