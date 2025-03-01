@@ -23,7 +23,7 @@ using Efferent.HL7.V2;
 
 ## Documentation
 
-Read the full documentation in the [wiki page](https://github.com/Efferent-Health/HL7-V2/wiki/Documentation#documentation).
+Read the full documentation in the [wiki page](https://github.com/Efferent-Health/HL7-V2/wiki/Composing-a-new-HL7-message).
 
 ## Credits
 This library has taken Jayant Singh's HL7 parser as its foundation: https://github.com/j4jayant/hl7-cSharp-parser
