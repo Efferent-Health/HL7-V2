@@ -50,12 +50,52 @@ namespace Efferent.HL7.V2
             return list.ToArray();
         }
 
-        public static DateTime? ParseDateTime(string dateTimeString, bool throwExeption = false)
+        /// <summary>
+        /// Parses an HL7 date time string into a <see cref="DateTime"/> object, with optional timezone offset handling.
+        /// </summary>
+        /// <param name="dateTimeString">The date time string to parse.</param>
+        /// <param name="throwException">If <c>true</c>, will throw an exception on failure; otherwise, will return <c>null</c>.</param>
+        /// <param name="applyOffset"><c>true</c> (default) to apply the timezone offset and return UTC; <c>false</c> to ignore it.</param>
+        /// <returns>
+        /// A <see cref="DateTime"/> object if parsing succeeds, or <c>null</c> if parsing fails and <paramref name="throwException"/> is <c>false</c>.
+        /// When <paramref name="applyOffset"/> is <c>true</c>, returns <see cref="DateTimeKind.Utc"/>.
+        /// When <paramref name="applyOffset"/> is <c>false</c>, returns <see cref="DateTimeKind.Unspecified"/>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// When applying the timezone offset, the parsed DateTime is treated at UTC to begin with, and then the offset is subtracted.
+        /// </para>
+        /// <para>
+        /// <strong>Timezone Handling:</strong>
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>When <paramref name="applyOffset"/> is <c>true</c>: The method treats the parsed DateTime as being in the specified timezone, then converts it to UTC by subtracting the offset.</description></item>
+        /// <item><description>When <paramref name="applyOffset"/> is <c>false</c>: The timezone offset is ignored, and the DateTime is returned as <see cref="DateTimeKind.Unspecified"/>.</description></item>
+        /// <item><description>If no timezone is specified in the input string, a zero offset is assumed.</description></item>
+        /// </list>
+        /// <para>
+        /// <strong>Important:</strong> When <paramref name="applyOffset"/> is <c>false</c>, the returned <see cref="DateTimeKind.Unspecified"/> DateTime 
+        /// will be treated as local time by .NET methods. This can cause inconsistent behavior across different system timezones. 
+        /// It is recommended to use <paramref name="applyOffset"/> = <c>true</c> unless you have specific requirements for preserving the original timezone context.
+        /// </para>
+        /// </remarks>
+        /// <inheritdoc cref="ParseDateTime(string, out TimeZone, bool, bool)" path="/exception[@cref='FormatException']"/>
+        public static DateTime? ParseDateTime(string dateTimeString, bool throwException = false, bool applyOffset = true)
         {
-            return ParseDateTime(dateTimeString, out TimeSpan offset, throwExeption);
+            return ParseDateTime(dateTimeString, out TimeSpan offset, throwException, applyOffset);
         }
 
-        public static DateTime? ParseDateTime(string dateTimeString, out TimeSpan offset, bool throwExeption = false)
+        /// <summary>
+        /// Parses an HL7 date time string into a <see cref="DateTime"/> object and extracts the timezone offset.
+        /// </summary>
+        /// <param name="dateTimeString">The HL7 date time string to parse (format: YYYY[MM[DD[HH[MM[SS[.FFFF]]]]]][+/-ZZZZ]).</param>
+        /// <param name="offset">The timezone offset extracted from the date time string.</param>
+        /// <param name="throwException">If <c>true</c>, throws an exception on parse failure; if <c>false</c>, returns <c>null</c>.</param>
+        /// <param name="applyOffset"><c>true</c> to apply the timezone offset and return UTC; <c>false</c> (default) to ignore it.</param>
+        /// <inheritdoc cref="ParseDateTime(string, bool, bool)" path="/returns"/>
+        /// <inheritdoc cref="ParseDateTime(string, bool, bool)" path="/remarks"/>
+        /// <exception cref="FormatException">Thrown when <paramref name="throwException"/> is <c>true</c> and the input string is not in a valid HL7 date time format.</exception>
+        public static DateTime? ParseDateTime(string dateTimeString, out TimeSpan offset, bool throwException = false, bool applyOffset = false)
         {
             var expr = @"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$";
             var matches = Regex.Matches(dateTimeString, expr, RegexOptions.Singleline);
@@ -82,11 +122,20 @@ namespace Efferent.HL7.V2
                 int tzm = groups[8].Success ? int.Parse(groups[8].Value, CultureInfo.InvariantCulture) : 0;
                 offset = new TimeSpan(tzh, tzm, 0);
 
-                return new DateTime(year, month, day, hours, mins, secs, msecs);
+                if (applyOffset)
+                {
+                    // When applying offset, convert to UTC
+                    return new DateTime(year, month, day, hours, mins, secs, msecs, DateTimeKind.Utc).Subtract(offset);
+                }
+                else
+                {
+                    // When not applying offset, return as Unspecified and leave to the caller to handle
+                    return new DateTime(year, month, day, hours, mins, secs, msecs);
+                }
             }
             catch
             {
-                if (throwExeption)
+                if (throwException)
                     throw;
 
                 return null;
