@@ -4,7 +4,7 @@
 ![downloads](https://img.shields.io/nuget/dt/HL7-v2)
 ![github](https://img.shields.io/github/stars/Efferent-Health/HL7-v2?style=flat&color=yellow)
 ![build](https://github.com/Efferent-Health/HL7-v2/actions/workflows/main.yml/badge.svg?branch=main)
-![Dependabot Status](https://img.shields.io/github/issues-pr-raw/OWNER/REPO/dependabot?label=dependabot%20PRs)
+![Dependabot PRs](https://img.shields.io/github/issues-pr-raw/Efferent-Health/HL7-V2/dependabot?label=dependabot%20PRs)
 
 This is a lightweight library for composing and parsing HL7 2.x messages, for modern .NET applications. 
 
