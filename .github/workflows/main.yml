@@ -17,10 +17,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - name: Compile source
-        run: dotnet build src/*.csproj --configuration Release
-      - name: Run unit tests
-        run: dotnet test test/*.csproj --logger:trx --configuration Release
+      - name: Compile source (.NET 8 + .NETStandard)
+        run: |
+          dotnet build src/*.csproj --configuration Release
+          dotnet build src/*.csproj --configuration Release -f netstandard2.1
+      - name: Run unit tests (.NET 8 + .NETStandard)
+        run: |
+          dotnet test test/*.csproj --logger:trx --configuration Release
+          dotnet test test/*.csproj --logger:trx --configuration Release -f netstandard2.1
         env:
           TEST_TITLE: HL7-V2 unit test
 
