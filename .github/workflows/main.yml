@@ -19,12 +19,12 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Compile source (.NET 8 + .NETStandard)
         run: |
-          dotnet build src/*.csproj --configuration Release
-          dotnet build src/*.csproj --configuration Release -f netstandard2.0
+          dotnet build src/HL7-V2.csproj --configuration Release
+          dotnet build src/HL7-V2.csproj --configuration Release -f netstandard2.0
       - name: Run unit tests (.NET 8 + .NETStandard)
         run: |
-          dotnet test test/*.csproj --logger:trx --configuration Release
-          dotnet test test/*.csproj --logger:trx --configuration Release -f netstandard2.0
+          dotnet test test/HL7Test.csproj --configuration Release --logger:trx --configuration Release
+          dotnet test test/HL7Test.csproj --configuration Release --logger:trx --configuration Release -f netstandard2.0
         env:
           TEST_TITLE: HL7-V2 unit test
 
