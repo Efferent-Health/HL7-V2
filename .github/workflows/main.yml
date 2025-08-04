@@ -23,8 +23,8 @@ jobs:
           dotnet build src/HL7-V2.csproj --configuration Release -f netstandard2.0
       - name: Run unit tests (.NET 8 + .NETStandard)
         run: |
-          dotnet test test/HL7Test.csproj --configuration Release --logger:trx --configuration Release
-          dotnet test test/HL7Test.csproj --configuration Release --logger:trx --configuration Release -f netstandard2.0
+          dotnet test test/HL7Test.csproj --configuration Release --logger:trx
+          dotnet test test/HL7Test.csproj --configuration Release --logger:trx -f netstandard2.0
         env:
           TEST_TITLE: HL7-V2 unit test
 
