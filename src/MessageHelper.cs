@@ -114,10 +114,8 @@ namespace Efferent.HL7.V2
                 int hours = groups[4].Success ? int.Parse(groups[4].Value, CultureInfo.InvariantCulture) : 0;
                 int mins = groups[5].Success ? int.Parse(groups[5].Value, CultureInfo.InvariantCulture) : 0;
 
-                float fsecs = groups[6].Success ? float.Parse(groups[6].Value, CultureInfo.InvariantCulture) : 0;
-                int secs = (int)Math.Truncate(fsecs);
-                int msecs = (int)Math.Truncate(fsecs * 1000) % 1000;
-
+                double secs = groups[6].Success ? double.Parse(groups[6].Value, CultureInfo.InvariantCulture) : 0;
+               
                 int tzh = groups[7].Success ? int.Parse(groups[7].Value, CultureInfo.InvariantCulture) : 0;
                 int tzm = groups[8].Success ? int.Parse(groups[8].Value, CultureInfo.InvariantCulture) : 0;
                 offset = new TimeSpan(tzh, tzm, 0);
@@ -125,12 +123,12 @@ namespace Efferent.HL7.V2
                 if (applyOffset)
                 {
                     // When applying offset, convert to UTC
-                    return new DateTime(year, month, day, hours, mins, secs, msecs, DateTimeKind.Utc).Subtract(offset);
+                    return new DateTime(year, month, day, hours, mins, 0, DateTimeKind.Utc).AddSeconds(secs).Subtract(offset);
                 }
                 else
                 {
                     // When not applying offset, return as Unspecified and leave to the caller to handle
-                    return new DateTime(year, month, day, hours, mins, secs, msecs);
+                    return new DateTime(year, month, day, hours, mins, 0).AddSeconds(secs);
                 }
             }
             catch

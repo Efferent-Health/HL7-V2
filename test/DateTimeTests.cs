@@ -48,7 +48,7 @@ namespace Efferent.HL7.V2.Test
         public void ParseDateTime_Correctness()
         {
             var date = MessageHelper.ParseDateTime("20151231234500.1234-2358", applyOffset: false).Value;
-            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123), date);
+            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123).AddMicroseconds(400), date);
             Assert.AreEqual(DateTimeKind.Unspecified, date.Kind);
         }
 
@@ -56,7 +56,7 @@ namespace Efferent.HL7.V2.Test
         public void ParseDateTime_Correctness_WithOffset()
         {
             var date = MessageHelper.ParseDateTime("20151231234500.1234-2358").Value;
-            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123).Subtract(new TimeSpan(-23, 58, 0)), date);
+            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123).AddMicroseconds(400).Subtract(new TimeSpan(-23, 58, 0)), date);
             Assert.AreEqual(DateTimeKind.Utc, date.Kind);
         }
 
@@ -64,8 +64,8 @@ namespace Efferent.HL7.V2.Test
         public void ParseDateTime_TimeSpanOut_Correctness()
         {
             TimeSpan offset;
-            var date = MessageHelper.ParseDateTime("20151231234500.1234-2358", out offset).Value;
-            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123), date);
+            var date = MessageHelper.ParseDateTime("20151231234502.1234-2358", out offset).Value;
+            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 02, 123).AddMicroseconds(400), date);
             Assert.AreEqual(DateTimeKind.Unspecified, date.Kind);
             Assert.AreEqual(new TimeSpan(-23, 58, 0), offset);
         }
@@ -75,7 +75,7 @@ namespace Efferent.HL7.V2.Test
         {
             TimeSpan offset;
             var date = MessageHelper.ParseDateTime("20151231234500.1234-2358", out offset, applyOffset: true).Value;
-            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123).Subtract(new TimeSpan(-23, 58, 0)), date);
+            Assert.AreEqual(new DateTime(2015, 12, 31, 23, 45, 00, 123).AddMicroseconds(400).Subtract(new TimeSpan(-23, 58, 0)), date);
             Assert.AreEqual(DateTimeKind.Utc, date.Kind);
             Assert.AreEqual(new TimeSpan(-23, 58, 0), offset);
         }
