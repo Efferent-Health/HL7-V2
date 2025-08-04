@@ -34,7 +34,7 @@ namespace Efferent.HL7.V2.Test
 
             var str = oru.SerializeMessage();
 
-            Assert.IsFalse(str.Contains('&'));  // Should have \T\ instead
+            Assert.IsFalse(str.Contains("&"));  // Should have \T\ instead
         }
 
         [TestMethod]
@@ -154,7 +154,7 @@ MSA|AA|9B38584D|Double encoded value: \E\T\E\|";
             var isParsed = message.ParseMessage();
 
             Assert.IsTrue(isParsed);
-            Assert.IsTrue(message.GetValue("MSA.3").EndsWith('&'));
+            Assert.IsTrue(message.GetValue("MSA.3").EndsWith("&"));
         }
 
         [TestMethod]
