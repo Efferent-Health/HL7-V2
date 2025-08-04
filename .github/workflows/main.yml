@@ -20,11 +20,11 @@ jobs:
       - name: Compile source (.NET 8 + .NETStandard)
         run: |
           dotnet build src/*.csproj --configuration Release
-          dotnet build src/*.csproj --configuration Release -f netstandard2.1
+          dotnet build src/*.csproj --configuration Release -f netstandard2.0
       - name: Run unit tests (.NET 8 + .NETStandard)
         run: |
           dotnet test test/*.csproj --logger:trx --configuration Release
-          dotnet test test/*.csproj --logger:trx --configuration Release -f netstandard2.1
+          dotnet test test/*.csproj --logger:trx --configuration Release -f netstandard2.0
         env:
           TEST_TITLE: HL7-V2 unit test
 
