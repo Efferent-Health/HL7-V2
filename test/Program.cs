@@ -12,10 +12,12 @@ namespace Efferent.HL7.V2.Test
         private readonly string HL7_ADT;
         public TestContext TestContext { get; set; }
 
+        /*
         public static void Main(string[] args)
         {
-            // var test = new HL7Test();
+            var test = new HL7Test();
         }
+        */
 
         public HL7Test()
         {

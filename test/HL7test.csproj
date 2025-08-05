@@ -5,9 +5,8 @@
     <TargetFrameworks>net8.0;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>HL7Test</AssemblyName>
     <PackageId>HL7Test</PackageId>
-    <OutputType>exe</OutputType>
-    <StartupObject>Efferent.HL7.V2.Test.HL7Test</StartupObject>
-    <LangVersion>12.0</LangVersion>
+    <OutputType>Library</OutputType>
+    <!-- StartupObject>Efferent.HL7.V2.Test.HL7Test</StartupObject-->
   </PropertyGroup>
 
   <ItemGroup>
