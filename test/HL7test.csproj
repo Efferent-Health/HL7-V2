@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Copyright>(c) Efferent Health, LLC</Copyright>
+    <Copyright>(c) Efferent, Inc.</Copyright>
     <VersionPrefix>3.6</VersionPrefix>
     <TargetFrameworks>net8.0;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>HL7Test</AssemblyName>
