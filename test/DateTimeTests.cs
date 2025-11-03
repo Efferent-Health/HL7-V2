@@ -8,7 +8,7 @@ namespace Efferent.HL7.V2.Test
     {
         public TestContext TestContext { get; set; }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("   20151231234500.1234+2358   ")]
         [DataRow("20151231234500.1234+2358")]
         [DataRow("20151231234500.1234-2358")]
@@ -27,7 +27,7 @@ namespace Efferent.HL7.V2.Test
             Assert.AreEqual(DateTimeKind.Utc, date.Value.Kind);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("   20151231234500.1234+23581")]
         [DataRow("20151231234500.1234+23")]
         [DataRow("20151231234500.12345")]
@@ -152,7 +152,7 @@ namespace Efferent.HL7.V2.Test
             }
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("18151231")]
         [DataRow("19151231")]
         [DataRow("20151231")]
@@ -163,7 +163,7 @@ namespace Efferent.HL7.V2.Test
             Assert.AreEqual(DateTimeKind.Utc, date.Value.Kind);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("1701231")]
         [DataRow("16151231")]
         [DataRow("00001231")]

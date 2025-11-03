@@ -149,7 +149,7 @@ namespace Efferent.HL7.V2.Test
             message.ParseMessage();
 
             var NK1 = message.DefaultSegment("NK1").GetAllFields();
-            Assert.AreEqual(34, NK1.Count);
+            Assert.HasCount(34, NK1);
             Assert.AreEqual(string.Empty, NK1[33].Value);
         }
 
@@ -204,16 +204,16 @@ namespace Efferent.HL7.V2.Test
         {
             var message = new Message(this.HL7_ADT);
             message.ParseMessage();
-            Assert.AreEqual(message.Segments("NK1").Count, 2);
-            Assert.AreEqual(message.SegmentCount, 5);
+            Assert.HasCount(2, message.Segments("NK1"));
+            Assert.AreEqual(5, message.SegmentCount);
 
             message.RemoveSegment("NK1", 1);
-            Assert.AreEqual(message.Segments("NK1").Count, 1);
-            Assert.AreEqual(message.SegmentCount, 4);
+            Assert.HasCount(1, message.Segments("NK1"));
+            Assert.AreEqual(4, message.SegmentCount);
 
             message.RemoveSegment("NK1");
-            Assert.AreEqual(message.Segments("NK1").Count, 0);
-            Assert.AreEqual(message.SegmentCount, 3);
+            Assert.HasCount(0, message.Segments("NK1"));
+            Assert.AreEqual(3, message.SegmentCount);
         }
 
         [TestMethod]
@@ -259,7 +259,7 @@ PID|1||MRN_123^^^IDX^MRN||Smith\F\\S\\R\\E\\T\^John||19600101|M";
             message.AddNewSegment(orcSegment);
 
             string serializedMessage = message.SerializeMessage();
-            Assert.AreEqual(orcSegment.Fields(12).Components().Count, 5);
+            Assert.HasCount(5, orcSegment.Fields(12).Components());
             Assert.AreEqual("ORC||||||||||||should not be removed^should not be removed^should not be removed^^should not be removed\r", serializedMessage);
         }
 
@@ -284,7 +284,7 @@ PID|1||MRN_123^^^IDX^MRN||Smith\F\\S\\R\\E\\T\^John||19600101|M";
             message.AddNewSegment(orcSegment);
 
             string serializedMessage = message.SerializeMessage();
-            Assert.AreEqual(orcSegment.Fields(12).Components().Count, 0);
+            Assert.HasCount(0, orcSegment.Fields(12).Components());
             Assert.AreEqual("ORC||||||||||||\r", serializedMessage);
         }
 
@@ -309,7 +309,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             }
             catch (Exception ex)
             {
-                Assert.Fail("Unexpected exception", ex);
+                Assert.Fail("Unexpected exception: " + ex.Message);
             }
         }
 
@@ -337,20 +337,20 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             var message = new Message(sampleMessage);
             message.ParseMessage();
 
-            var invalidRequest = Assert.ThrowsException<HL7Exception>(() => message.SetValue(string.Empty, testValue));
-            Assert.IsTrue(invalidRequest.Message.Contains("Request format"), "Should have thrown exception because of invalid request format");
+            var invalidRequest = Assert.Throws<HL7Exception>(() => message.SetValue(string.Empty, testValue));
+            Assert.Contains("Request format", invalidRequest.Message, "Should have thrown exception because of invalid request format");
             
-            var unavailableSegment = Assert.ThrowsException<HL7Exception>(() => message.SetValue("OBX.1", testValue));
-            Assert.IsTrue(unavailableSegment.Message.Contains("Segment name"), "Should have thrown exception because of unavailable Segment");
+            var unavailableSegment = Assert.Throws<HL7Exception>(() => message.SetValue("OBX.1", testValue));
+            Assert.Contains("Segment name", unavailableSegment.Message, "Should have thrown exception because of unavailable Segment");
             
-            var segmentLevel = Assert.ThrowsException<HL7Exception>(() => message.SetValue("PID.30", testValue));
-            Assert.IsTrue(segmentLevel.Message.Contains("Field not available"), "Should have thrown exception because of unavailable Field");
+            var segmentLevel = Assert.Throws<HL7Exception>(() => message.SetValue("PID.30", testValue));
+            Assert.Contains("Field not available", segmentLevel.Message, "Should have thrown exception because of unavailable Field");
             
-            var componentLevel = Assert.ThrowsException<HL7Exception>(() => message.SetValue("PID.3.7", testValue));
-            Assert.IsTrue(componentLevel.Message.Contains("Component not available"), "Should have thrown exception because of unavailable Component");
+            var componentLevel = Assert.Throws<HL7Exception>(() => message.SetValue("PID.3.7", testValue));
+            Assert.Contains("Component not available", componentLevel.Message, "Should have thrown exception because of unavailable Component");
             
-            var subComponentLevel = Assert.ThrowsException<HL7Exception>(() => message.SetValue("PID.3.1.2", testValue));
-            Assert.IsTrue(subComponentLevel.Message.Contains("SubComponent not available"), "Should have thrown exception because of unavailable SubComponent");
+            var subComponentLevel = Assert.Throws<HL7Exception>(() => message.SetValue("PID.3.1.2", testValue));
+            Assert.Contains("SubComponent not available", subComponentLevel.Message, "Should have thrown exception because of unavailable SubComponent");
         }
 
         [TestMethod]
@@ -430,7 +430,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             }
             catch (Exception ex)
             {
-                Assert.Fail("Unexpected exception", ex);
+                Assert.Fail("Unexpected exception: " + ex.Message);
             }
         }
     }

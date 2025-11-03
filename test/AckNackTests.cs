@@ -45,9 +45,9 @@ namespace Efferent.HL7.V2.Test
             var MSA_1_1 = ack.GetValue("MSA.1");
             var MSA_1_2 = ack.GetValue("MSA.2");
 
-            Assert.AreEqual(MSA_1_1, "AA");
-            Assert.AreEqual(MSH_10, MSH_10_A);
-            Assert.AreEqual(MSH_10, MSA_1_2);
+            Assert.AreEqual("AA", MSA_1_1);
+            Assert.AreEqual(MSH_10_A, MSH_10);
+            Assert.AreEqual(MSA_1_2, MSH_10);
         }
 
         [TestMethod]
@@ -101,8 +101,8 @@ namespace Efferent.HL7.V2.Test
             var ACK_MSH_2 = ack.GetValue("MSH.2");
             var MSG_MSH_2 = message.GetValue("MSH.2");
 
-            Assert.AreEqual(ACK_MSH_2, "^~&");
-            Assert.AreEqual(MSG_MSH_2, "^~&");
+            Assert.AreEqual("^~&", ACK_MSH_2);
+            Assert.AreEqual("^~&", MSG_MSH_2);
         }
 
         [TestMethod]
@@ -134,7 +134,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             }
             catch (Exception ex)
             {
-                Assert.Fail("Unexpected exception", ex);
+                Assert.Fail("Unexpected exception: " + ex.Message);
             }
         }
 
@@ -172,7 +172,7 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             }
             catch (Exception ex)
             {
-                Assert.Fail("Unexpected exception", ex);
+                Assert.Fail("Unexpected exception: " + ex.Message);
             }
         }
     }
