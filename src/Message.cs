@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 #pragma warning disable CA1854
 
@@ -171,6 +173,41 @@ namespace Efferent.HL7.V2
             {
                 throw new HL7Exception("Failed to serialize the message with error - " + ex.Message, HL7Exception.SerializationError, ex);
             }
+        }
+
+        /// <summary>
+        /// Serializes the message directly to a StreamWriter
+        /// </summary>
+        /// <param name="stream">The Stream to write to</param>
+        /// <param name="validate">Validate the message before serializing</param>
+        /// <remarks>Uses UTF-8 encoding</remarks>
+        /// <remarks>Only use true in when serializing a previously existing message</remarks>
+        /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
+        public async Task SerializeMessageAsync(Stream stream, bool validate = false)
+        {
+            using var streamWriter = new StreamWriter(stream, System.Text.Encoding.UTF8, 1024, true);
+            await SerializeMessageAsync(streamWriter, validate);
+        }
+
+        /// <summary>
+        /// Serializes the message directly to a StreamWriter
+        /// </summary>
+        /// <param name="streamWriter">The StreamWriter to use</param>
+        /// <param name="validate">Validate the message before serializing</param>
+        /// <remarks>Only use true in when serializing a previously existing message</remarks>
+        /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
+        public async Task SerializeMessageAsync(StreamWriter streamWriter, bool validate = false)
+        {
+            if (validate && !this.validateMessage())
+                throw new HL7Exception("Failed to validate the updated message", HL7Exception.BadMessage);
+
+            List<Segment> _segListOrdered = getAllSegmentsInOrder();
+            foreach (var seg in _segListOrdered)
+            {
+                await seg.SerializeSegmentAsync(streamWriter);
+                await streamWriter.WriteAsync(Encoding.SegmentDelimiter);
+            }
+            await streamWriter.FlushAsync();
         }
 
         /// <summary>

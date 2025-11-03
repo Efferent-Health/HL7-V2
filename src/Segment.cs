@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Efferent.HL7.V2
 {
@@ -168,6 +170,49 @@ namespace Efferent.HL7.V2
             }
 
             strMessage.Append(Encoding.SegmentDelimiter);
+        }
+
+        /// <summary>
+        /// Serializes a segment into a TextWriter with proper encoding
+        /// </summary>
+        /// <param name="writer">A TextWriter to write on</param>
+        public async Task SerializeSegmentAsync(TextWriter writer)
+        {
+            
+            await writer.WriteAsync(this.Name);
+
+            if (this.FieldList.Count > 0)
+                await writer.WriteAsync(Encoding.FieldDelimiter);
+
+            int startField = this.Name == "MSH" ? 1 : 0;
+
+            for (int i = startField; i < this.FieldList.Count; i++)
+            {
+                if (i > startField)
+                    await writer.WriteAsync(Encoding.FieldDelimiter);
+
+                var field = this.FieldList[i];
+
+                if (field.IsDelimitersField)
+                {
+                    await writer.WriteAsync(field.UndecodedValue);
+                    continue;
+                }
+
+                if (field.HasRepetitions)
+                {
+                    for (int j = 0; j < field.RepetitionList.Count; j++)
+                    {
+                        if (j > 0)
+                            await writer.WriteAsync(Encoding.RepeatDelimiter);
+                        await field.RepetitionList[j].SerializeFieldAsync(writer);
+                    }
+                }
+                else
+                {
+                    await field.SerializeFieldAsync(writer);
+                }
+            }
         }
     }
 }

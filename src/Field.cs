@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Efferent.HL7.V2
 {
@@ -206,6 +208,41 @@ namespace Efferent.HL7.V2
             else
             {
                 strMessage.Append(Encoding.Encode(this.Value));
+            }
+        }
+
+        /// <summary>
+        /// Serializes a field into a TextWriter with proper encoding
+        /// </summary>
+        /// <param name="writer">A TextWriter to write on</param>
+        public async Task SerializeFieldAsync(TextWriter writer)
+        {
+            if (this.ComponentList.Count > 0)
+            {
+                int indexCom = 0;
+                foreach (Component com in this.ComponentList)
+                {
+                    if (indexCom > 0)
+                        await writer.WriteAsync(Encoding.ComponentDelimiter);
+                    indexCom++;
+                    if (com.SubComponentList.Count > 0)
+                    {
+                        for (int k = 0; k < com.SubComponentList.Count; k++)
+                        {
+                            if (k > 0)
+                                await writer.WriteAsync(Encoding.SubComponentDelimiter);
+                            await writer.WriteAsync(Encoding.Encode(com.SubComponentList[k].Value));
+                        }
+                    }
+                    else
+                    {
+                        await writer.WriteAsync(Encoding.Encode(com.Value));
+                    }
+                }
+            }
+            else
+            {
+                await writer.WriteAsync(Encoding.Encode(this.Value));
             }
         }
     }
