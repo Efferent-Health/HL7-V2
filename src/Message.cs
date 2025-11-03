@@ -176,12 +176,12 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Serializes the message directly to a StreamWriter
+        /// Serializes the message to a Stream
         /// </summary>
         /// <param name="stream">The Stream to write to</param>
         /// <param name="validate">Validate the message before serializing</param>
-        /// <remarks>Uses UTF-8 encoding</remarks>
-        /// <remarks>Only use true in when serializing a previously existing message</remarks>
+        /// <remarks>Uses UTF-8 encoding. Use the overload with a StreamWriter parameter to control this behaviour.</remarks>
+        /// <remarks>Only use true when serializing a previously existing message</remarks>
         /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
         public async Task SerializeMessageAsync(Stream stream, bool validate = false)
         {
@@ -190,11 +190,11 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Serializes the message directly to a StreamWriter
+        /// Serializes the message to a StreamWriter
         /// </summary>
         /// <param name="streamWriter">The StreamWriter to use</param>
         /// <param name="validate">Validate the message before serializing</param>
-        /// <remarks>Only use true in when serializing a previously existing message</remarks>
+        /// <remarks>Only use true when serializing a previously existing message</remarks>
         /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
         public async Task SerializeMessageAsync(StreamWriter streamWriter, bool validate = false)
         {
