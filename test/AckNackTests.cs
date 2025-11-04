@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Efferent.HL7.V2.Test
@@ -8,21 +6,12 @@ namespace Efferent.HL7.V2.Test
     [TestClass]
     public class AckNackTests
     {
-        private readonly string HL7_ORM;
-        private readonly string HL7_ADT;
         public TestContext TestContext { get; set; }
-
-        public AckNackTests()
-        {
-            var path = Path.GetDirectoryName(typeof(HL7Test).GetTypeInfo().Assembly.Location) + "/";
-            this.HL7_ORM = File.ReadAllText(path + "Sample-ORM.txt");
-            this.HL7_ADT = File.ReadAllText(path + "Sample-ADT.txt");
-        }
 
         [TestMethod]
         public void GetAckTest()
         {
-            var message = new Message(this.HL7_ADT);
+            var message = new Message(HL7Test.HL7_ADT);
             message.ParseMessage();
             var ack = message.GetACK();
 
@@ -53,7 +42,7 @@ namespace Efferent.HL7.V2.Test
         [TestMethod]
         public void GetNackTest()
         {
-            var message = new Message(this.HL7_ADT);
+            var message = new Message(HL7Test.HL7_ADT);
             message.ParseMessage();
 
             var error = "Error message";

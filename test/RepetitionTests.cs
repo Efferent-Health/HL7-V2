@@ -1,5 +1,3 @@
-using System.IO;
-using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Efferent.HL7.V2.Test
@@ -7,14 +5,7 @@ namespace Efferent.HL7.V2.Test
     [TestClass]
     public class RepetitionTests
     {
-        private readonly string HL7_ADT;
         public TestContext TestContext { get; set; }
-
-        public RepetitionTests()
-        {
-            var path = Path.GetDirectoryName(typeof(HL7Test).GetTypeInfo().Assembly.Location) + "/";
-            this.HL7_ADT = File.ReadAllText(path + "Sample-ADT.txt");
-        }
 
         [TestMethod]
         [DataRow("PV1.7.1", "1447312459")]
@@ -82,7 +73,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
         [TestMethod]
         public void FieldHasRepetitions()
         {
-            string sampleMessage = this.HL7_ADT;
+            string sampleMessage = HL7Test.HL7_ADT;
             var message = new Message(sampleMessage);
             message.ParseMessage();
 
@@ -119,7 +110,7 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
             var strValueFormat = "NK1.2.1";
             var unchangedValuePath = "NK1.2.2";
             var newFamilyName = "SCHMOE";
-            var message = new Message(HL7_ADT);
+            var message = new Message(HL7Test.HL7_ADT);
             message.ParseMessage();
 
             message.SetValue(strValueFormat, newFamilyName);
