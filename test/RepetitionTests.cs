@@ -16,7 +16,7 @@ namespace Efferent.HL7.V2.Test
             this.HL7_ADT = File.ReadAllText(path + "Sample-ADT.txt");
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("PV1.7.1", "1447312459")]
         [DataRow("PV1.7(1).1", "1447312459")]
         [DataRow("PV1.7[1].1", "1447312459")]

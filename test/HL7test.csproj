@@ -2,12 +2,13 @@
   <PropertyGroup>
     <Copyright>(c) Efferent, Inc.</Copyright>
     <VersionPrefix>3.6.1</VersionPrefix>
-    <TargetFrameworks>net8.0;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <AssemblyName>HL7Test</AssemblyName>
     <PackageId>HL7Test</PackageId>
     <OutputType>Library</OutputType>
     <LangVersion>12.0</LangVersion>
     <!-- StartupObject>Efferent.HL7.V2.Test.HL7Test</StartupObject-->
+    <NoWarn>$(NoWarn);MSTEST0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,9 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.10.2" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.10.2" />
+    <PackageReference Include="MSTest" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>

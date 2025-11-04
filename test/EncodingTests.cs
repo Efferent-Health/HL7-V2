@@ -12,7 +12,7 @@ namespace Efferent.HL7.V2.Test
         public void NotEncodingTest()
         {
             var enc = new HL7Encoding().Encode("<1");
-            Assert.AreEqual(enc, "<1");
+            Assert.AreEqual(expected: "<1", actual: enc);
         }
 
         [TestMethod]
@@ -34,7 +34,7 @@ namespace Efferent.HL7.V2.Test
 
             var str = oru.SerializeMessage();
 
-            Assert.IsFalse(str.Contains("&"));  // Should have \T\ instead
+            Assert.DoesNotContain("&", str);  // Should have \T\ instead
         }
 
         [TestMethod]
@@ -45,7 +45,7 @@ namespace Efferent.HL7.V2.Test
             var message = new Message(sampleMessage);
             var isParsed = message.ParseMessage();
             Assert.IsTrue(isParsed);
-            Assert.IsTrue(message.SegmentCount > 0);
+            Assert.IsGreaterThan(0, message.SegmentCount);
         }
 
         [TestMethod]
@@ -56,7 +56,7 @@ namespace Efferent.HL7.V2.Test
             var message = new Message(sampleMessage);
             var isParsed = message.ParseMessage();
             Assert.IsTrue(isParsed);
-            Assert.IsTrue(message.SegmentCount > 0);
+            Assert.IsGreaterThan(0, message.SegmentCount);
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace Efferent.HL7.V2.Test
             var message = new Message(sampleMessage);
             message.ParseMessage();
             var serialized = message.SerializeMessage();
-            Assert.AreEqual(sampleMessage, serialized);
+            Assert.AreEqual(expected: sampleMessage, actual: serialized);
         }
 
         [TestMethod]
@@ -100,7 +100,7 @@ ZZ1|1|139378|20201230100000|ghg^ghgh-HA||s1^OP-Saal 1|gh^gjhg 1|ghg^ghjg-HA|BSV 
                 "FIFTH", "ORU2R05F5", "SIXTH", "SEVENTH", "2.8");
             var result = message.SerializeMessage();
 
-            Assert.AreEqual("MSH124531FIRST1SECOND1", result.Substring(0, 22));
+            Assert.AreEqual(expected: "MSH124531FIRST1SECOND1", actual: result.Substring(0, 22));
         }
 
         [TestMethod]
@@ -115,8 +115,8 @@ ZZ1|1|139378|20201230100000|ghg^ghgh-HA||s1^OP-Saal 1|gh^gjhg 1|ghg^ghjg-HA|BSV 
             var component = message.Segments("PID")[0].Fields(5).Components(1).Value;
             var subcomponent = message.Segments("PID")[0].Fields(5).Components(1).SubComponents(1).Value;
 
-            Assert.AreEqual(component, subcomponent);
-            Assert.IsTrue(field.StartsWith(component));
+            Assert.AreEqual(expected: component, actual: subcomponent);
+            Assert.StartsWith(component, field); 
         }
 
         [TestMethod]
@@ -131,8 +131,8 @@ ZZ1|1|139378|20201230100000|ghg^ghgh-HA||s1^OP-Saal 1|gh^gjhg 1|ghg^ghjg-HA|BSV 
             var component = message.GetValue("PID.5.1");
             var subcomponent = message.GetValue("PID.5.1.1");
 
-            Assert.AreEqual(component, subcomponent);
-            Assert.IsTrue(field.StartsWith(component));
+            Assert.AreEqual(expected: component, actual: subcomponent);
+            Assert.StartsWith(component, field);
         }
 
         [TestMethod]
@@ -140,8 +140,8 @@ ZZ1|1|139378|20201230100000|ghg^ghgh-HA||s1^OP-Saal 1|gh^gjhg 1|ghg^ghjg-HA|BSV 
         {
             var enconding = new HL7Encoding();
 
-            Assert.AreEqual(enconding.Decode(@"T\XC3A4\glich 1 Tablette oral einnehmen"), "Täglich 1 Tablette oral einnehmen");
-            Assert.AreEqual(enconding.Decode(@"\XE6AF8F\\XE5A4A9\\XE69C8D\\XE794A8\"), "每天服用");
+            Assert.AreEqual(expected: "Täglich 1 Tablette oral einnehmen", actual: enconding.Decode(@"T\XC3A4\glich 1 Tablette oral einnehmen"));
+            Assert.AreEqual(expected: "每天服用", actual: enconding.Decode(@"\XE6AF8F\\XE5A4A9\\XE69C8D\\XE794A8\"));
         }
 
         [TestMethod]
@@ -154,7 +154,7 @@ MSA|AA|9B38584D|Double encoded value: \E\T\E\|";
             var isParsed = message.ParseMessage();
 
             Assert.IsTrue(isParsed);
-            Assert.IsTrue(message.GetValue("MSA.3").EndsWith("&"));
+            Assert.EndsWith("&", message.GetValue("MSA.3"));
         }
 
         [TestMethod]
@@ -188,8 +188,8 @@ PV1|1|I|1999^2012^01||||004777^FAKES^FAKESSSS^J.|||SUR||||ADM|A0";
             var component = message.GetValue("PID.5.1");
             var subcomponent = message.GetValue("PID.5.1.1");
 
-            Assert.AreEqual(component, subcomponent);
-            Assert.IsTrue(field.StartsWith(component));
+            Assert.AreEqual(expected: component, actual: subcomponent);
+            Assert.StartsWith(component, field);
         }
 
         [TestMethod]
@@ -235,7 +235,7 @@ OBX|36|TX|^^^^^|| OTHER: Right medial orbital wall fracture noted\";
 
             var strMessage = message.SerializeMessage();
 
-            Assert.IsTrue(strMessage.EndsWith("\\E\\\n"));
+            Assert.EndsWith("\\E\\\n", strMessage);
             TestContext.WriteLine(strMessage);
         }
 
@@ -256,7 +256,7 @@ PV1||O|80D18802^^^SAMPLE ORTHO URGENT CARE||||1905555652^JANE^D^DOE||||||||||103
                 message2.AddNewSegment(segment.DeepCopy());
             }
 
-            Assert.IsTrue(message2.GetValue("PID.11").IndexOf('\n') > 1);
+            Assert.IsGreaterThan(1, message2.GetValue("PID.11").IndexOf('\n'));
         }
 
         [TestMethod]
@@ -270,7 +270,7 @@ PV1||O|80D18802^^^SAMPLE ORTHO URGENT CARE||||1905555652^JANE^D^DOE||||||||||103
 
             var evn = message.Segments("EVN")[0];
             var expectDoubleQuotes = evn.Fields(4).Value;
-            Assert.AreEqual("\"\"", expectDoubleQuotes);
+            Assert.AreEqual(expected: "\"\"", actual: expectDoubleQuotes);
         }
 
         [TestMethod]
@@ -280,7 +280,7 @@ PV1||O|80D18802^^^SAMPLE ORTHO URGENT CARE||||1905555652^JANE^D^DOE||||||||||103
             var message = new Message(sampleMessage);
             message.ParseMessage();
             var serialized = message.SerializeMessage();
-            Assert.AreEqual(sampleMessage, serialized);
+            Assert.AreEqual(expected: sampleMessage, actual: serialized);
         }
 
         [TestMethod]
@@ -291,12 +291,12 @@ PV1||O|80D18802^^^SAMPLE ORTHO URGENT CARE||||1905555652^JANE^D^DOE||||||||||103
             var message = new Message(sampleMessage);
             var isParsed = message.ParseMessage();
             Assert.IsTrue(isParsed);
-            Assert.IsTrue(message.SegmentCount > 0);
+            Assert.IsGreaterThan(0, message.SegmentCount);
             var evn = message.Segments("EVN")[0];
             var expectEmpty = evn.Fields(3).Value;
-            Assert.AreEqual(string.Empty, expectEmpty);
+            Assert.AreEqual(expected: string.Empty, actual: expectEmpty);
             var expectNull = evn.Fields(4).Value;
-            Assert.AreEqual(null, expectNull);
+            Assert.IsNull(expectNull);
         }
     }    
 }
