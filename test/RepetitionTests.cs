@@ -82,6 +82,33 @@ PV1||A|00004620^00001318^1318||||000123456^Superfrau^Maria W.^|^Superarzt^Anton^
         }
 
         [TestMethod]
+        public void FieldHasAnyPopulatedRepetitions()
+        {
+            //string sampleMessage = HL7Test.HL7_ADT;
+            string sampleMessage = "MSH|^~\\&|AcmeHIS|StJohn|CATH|StJohn|20061019172719||ADT^O01|MSGID12349876|P|2.3\r\nPID||0493575^^^2^ID 1|454721||DOE^JOHN^^^^|DOE^JOHN^^^^|19480203|M||B|254 MYSTREET AVE^^MYTOWN^OH^44123^USA||(216)123-4567|||M|NON|400003403~1129086|TEST~|\r\n ";
+            var message = new Message(sampleMessage);
+            message.ParseMessage();
+
+            Assert.IsFalse(message.Segments("PID")[0].Fields(3).HasAnyPopulatedRepetitions);
+            Assert.IsTrue(message.Segments("PID")[0].Fields(18).HasAnyPopulatedRepetitions);
+            Assert.IsTrue(message.Segments("PID")[0].Fields(19).HasAnyPopulatedRepetitions);
+        }
+
+        [TestMethod]
+        public void FieldHasOnlyPopulatedRepetitions()
+        {
+            //string sampleMessage = HL7Test.HL7_ADT;
+            string sampleMessage = "MSH|^~\\&|AcmeHIS|StJohn|CATH|StJohn|20061019172719||ADT^O01|MSGID12349876|P|2.3\r\nPID||0493575^^^2^ID 1|454721||DOE^JOHN^^^^|DOE^JOHN^^^^|19480203|M||B|254 MYSTREET AVE^^MYTOWN^OH^44123^USA||(216)123-4567|||M|NON|400003403~1129086|TEST~|\r\n ";
+
+            var message = new Message(sampleMessage);
+            message.ParseMessage();
+         
+            Assert.IsFalse(message.Segments("PID")[0].Fields(3).HasOnlyPopulatedRepetitions);
+            Assert.IsTrue(message.Segments("PID")[0].Fields(18).HasOnlyPopulatedRepetitions);
+            Assert.IsFalse(message.Segments("PID")[0].Fields(19).HasOnlyPopulatedRepetitions);
+        }
+
+        [TestMethod]
         public void AddRepeatingField()
         {
             var enc = new HL7Encoding();
