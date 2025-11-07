@@ -13,6 +13,57 @@ namespace Efferent.HL7.V2
 
         public bool IsComponentized { get; set; } = false;
         public bool HasRepetitions { get; set; } = false;
+
+        /// <summary>
+        /// Gets a value indicating whether any of the repetitions contain data.
+        /// </summary>
+        /// <remarks>
+        /// This property performs a check to determine if any repetition in the list has a 
+        /// value that is not null or empty. If the list contains no repetitions, or if all
+        /// are empty or null, the property returns <see langword="false"/>; 
+        /// otherwise the property returns <see langword="true"/>.
+        public bool HasAnyPopulatedRepetitions         {
+            get
+            {
+                // Quick check, exit early
+                if (!HasRepetitions) return false;
+
+                // Search for any populated repetition
+                foreach (var repetition in RepetitionList)
+                {
+                    if (!string.IsNullOrEmpty(repetition.Value))
+                        return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether all repetitions in the list are populated with non-empty values.
+        /// </summary>
+        /// <remarks>This property performs a check to ensure that every repetition in the list has a
+        /// non-empty value.  If the list contains no repetitions, or if any repetition has an empty or null value, 
+        /// then the property returns <see langword="false"/>; otherwise the property returns <see langword="true"/>. 
+        /// </remarks>
+        public bool HasOnlyPopulatedRepetitions
+        {
+            get
+            {
+                // Quick check, exit early
+                if (!HasRepetitions) return false;
+         
+                // Search for any unpopulated repetition
+                foreach (var repetition in RepetitionList)
+                {
+                    if (string.IsNullOrEmpty(repetition.Value))
+                        return false;
+                }
+
+                // All were populated
+                return true;
+            }
+        }
+
         public bool IsDelimitersField { get; set; } = false;
 
         internal List<Field> RepetitionList
