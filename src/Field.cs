@@ -22,7 +22,8 @@ namespace Efferent.HL7.V2
         /// value that is not null or empty. If the list contains no repetitions, or if all
         /// are empty or null, the property returns <see langword="false"/>; 
         /// otherwise the property returns <see langword="true"/>.
-        public bool HasAnyPopulatedRepetitions         {
+        public bool HasAnyPopulatedRepetitions
+        {
             get
             {
                 // Quick check, exit early
