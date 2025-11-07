@@ -12,6 +12,13 @@ namespace Efferent.HL7.V2
         internal ComponentCollection ComponentList { get; set; }
 
         public bool IsComponentized { get; set; } = false;
+
+        /// <summary>
+        /// Gets a value indicating whether the field contains any repetitions.
+        /// </summary>
+        /// <remarks>
+        /// Please note, this will still be <see langword="true"/> for repetitions that are empty.
+        /// </remarks>
         public bool HasRepetitions { get; set; } = false;
 
         /// <summary>
