@@ -33,7 +33,7 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
-    if: contains(github.event.head_commit.modified, 'src/HL7-V2.csproj') || contains(github.event.head_commit.added, 'src/HL7-V2.csproj') || contains(github.event.head_commit.renamed, 'src/HL7-V2.csproj')
+    #if: contains(github.event.head_commit.modified, 'src/HL7-V2.csproj') || contains(github.event.head_commit.added, 'src/HL7-V2.csproj') || contains(github.event.head_commit.renamed, 'src/HL7-V2.csproj')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
