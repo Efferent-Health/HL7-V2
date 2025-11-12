@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -254,7 +253,14 @@ namespace Efferent.HL7.V2
                     indexCom++;
 
                     if (com.SubComponentList.Count > 0)
-                        await writer.WriteAsync(string.Join(Encoding.SubComponentDelimiter.ToString(), com.SubComponentList.Select(sc => Encoding.Encode(sc.Value))));
+                    {
+                        for (int i = 0; i < com.SubComponentList.Count; i++)
+                        {
+                            if (i > 0)
+                                await writer.WriteAsync(Encoding.SubComponentDelimiter);
+                            await writer.WriteAsync(Encoding.Encode(com.SubComponentList[i].Value));
+                        }
+                    }
                     else
                         await writer.WriteAsync(Encoding.Encode(com.Value));
 
