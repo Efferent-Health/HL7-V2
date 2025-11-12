@@ -42,7 +42,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - name: Prepare NuGet package
-        run: dotnet pack **/HL7-V2.csproj --configuration Release
+        run: dotnet pack src/HL7-V2.csproj --configuration Release
       - name: Publish NuGet package
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
