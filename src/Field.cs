@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Efferent.HL7.V2
 {
@@ -88,6 +90,12 @@ namespace Efferent.HL7.V2
             this.Value = value;
         }
 
+        /// <summary>
+        /// Adds a new component to the component list of the field.
+        /// </summary>
+        /// <param name="com">The component to add.</param>
+        /// <returns>True if the component was added successfully.</returns>
+        /// <exception cref="HL7Exception">Thrown when unable to add the new component.</exception>
         public bool AddNewComponent(Component com)
         {
             try
@@ -101,6 +109,13 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Adds a new component to the component list of the field at the specified position.
+        /// </summary>
+        /// <param name="component">The component to add.</param>
+        /// <param name="position">The position at which to add the component (1-based index).</param>
+        /// <returns>True if the component was added successfully.</returns>
+        /// <exception cref="HL7Exception">Thrown when unable to add the new component.</exception>
         public bool AddNewComponent(Component component, int position)
         {
             try
@@ -114,6 +129,12 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Retrieves the component at the specified position.
+        /// </summary>
+        /// <param name="position">The position of the component to retrieve (1-based index).</param>
+        /// <returns>The component at the specified position.</returns>
+        /// <exception cref="HL7Exception">Thrown when the component is not available at the specified position.</exception>
         public Component Components(int position)
         {
             position--;
@@ -128,11 +149,19 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Retrieves all components of the field.
+        /// </summary>
+        /// <returns>A list of all components in the field.</returns>
         public List<Component> Components()
         {
             return ComponentList;
         }
 
+        /// <summary>
+        /// Retrieves all repetitions of the field if any exist.
+        /// </summary>
+        /// <returns>A list of field repetitions if they exist; otherwise, null.</returns>
         public List<Field> Repetitions()
         {
             if (this.HasRepetitions)
@@ -141,6 +170,11 @@ namespace Efferent.HL7.V2
             return null;
         }
 
+        /// <summary>
+        /// Retrieves a specific repetition of the field.
+        /// </summary>
+        /// <param name="repetitionNumber">The repetition number to retrieve (1-based index).</param>
+        /// <returns>The field repetition at the specified repetition number if it exists; otherwise, null.</returns>
         public Field Repetitions(int repetitionNumber)
         {
             if (this.HasRepetitions)
@@ -149,6 +183,11 @@ namespace Efferent.HL7.V2
             return null;
         }
 
+        /// <summary>
+        /// Removes any trailing components that have empty values from the component list.
+        /// </summary>
+        /// <returns>True if the operation was successful.</returns>
+        /// <exception cref="HL7Exception">Thrown when an error occurs while removing trailing components.</exception>
         public bool RemoveEmptyTrailingComponents()
         {
             try
@@ -169,6 +208,13 @@ namespace Efferent.HL7.V2
             }
         }
         
+        /// <summary>
+        /// Adds a field to the list of repeating fields.
+        /// </summary>
+        /// <param name="field">The field to add as a repetition.</param>
+        /// <exception cref="HL7Exception">
+        /// Thrown when the field is not marked as having repetitions (HasRepetitions must be true).
+        /// </exception>
         public void AddRepeatingField(Field field) 
         {
             if (!this.HasRepetitions) 
@@ -181,10 +227,23 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Serializes a field into a string with proper encoding
+        /// Serializes a field into a string with proper encoding.
         /// </summary>
-        /// <param name="strMessage">A StringBuilder to write on</param>
+        /// <param name="strMessage">A StringBuilder to write the serialized field into.</param>
         public void SerializeField(StringBuilder strMessage)
+        {
+            using (var writer = new StringWriter(strMessage))
+            {
+                this.SerializeFieldAsync(writer).GetAwaiter().GetResult();
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously serializes a field into a TextWriter with proper encoding.
+        /// </summary>
+        /// <param name="writer">A TextWriter to write the serialized field into.</param>
+        /// <returns>A task representing the asynchronous serialization operation.</returns>
+        public async Task SerializeFieldAsync(TextWriter writer)
         {
             if (this.ComponentList.Count > 0)
             {
@@ -195,17 +254,17 @@ namespace Efferent.HL7.V2
                     indexCom++;
 
                     if (com.SubComponentList.Count > 0)
-                        strMessage.Append(string.Join(Encoding.SubComponentDelimiter.ToString(), com.SubComponentList.Select(sc => Encoding.Encode(sc.Value))));
+                        await writer.WriteAsync(string.Join(Encoding.SubComponentDelimiter.ToString(), com.SubComponentList.Select(sc => Encoding.Encode(sc.Value))));
                     else
-                        strMessage.Append(Encoding.Encode(com.Value));
+                        await writer.WriteAsync(Encoding.Encode(com.Value));
 
                     if (indexCom < this.ComponentList.Count)
-                        strMessage.Append(Encoding.ComponentDelimiter);
+                        await writer.WriteAsync(Encoding.ComponentDelimiter);
                 }
             }
             else
             {
-                strMessage.Append(Encoding.Encode(this.Value));
+                await writer.WriteAsync(Encoding.Encode(this.Value));
             }
         }
     }

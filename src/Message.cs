@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 #pragma warning disable CA1854
 
@@ -155,17 +157,55 @@ namespace Efferent.HL7.V2
         /// <returns>string with HL7 message</returns>
         public string SerializeMessage(bool validate = false)
         {
+            var strMessage = new StringBuilder();
+            
+            using (var writer = new StringWriter(strMessage))
+            {
+                this.SerializeMessageAsync(writer).GetAwaiter().GetResult();
+            }
+
+            return strMessage.ToString();
+        }
+
+        /// <summary>
+        /// Serializes the message to a Stream
+        /// </summary>
+        /// <param name="stream">The Stream to write to</param>
+        /// <param name="validate">Validate the message before serializing</param>
+        /// <remarks>Uses UTF-8 encoding. Use the overload with a StreamWriter parameter to control this behaviour.</remarks>
+        /// <remarks>Only use true when serializing a previously existing message</remarks>
+        /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
+        public async Task SerializeMessageAsync(Stream stream, bool validate = false)
+        {
+            using var streamWriter = new StreamWriter(stream, System.Text.Encoding.UTF8, 1024, true);
+            await SerializeMessageAsync(streamWriter, validate);
+        }
+
+        /// <summary>
+        /// Serializes the message to a TextWriter
+        /// </summary>
+        /// <param name="streamWriter">The TextWriter to use</param>
+        /// <param name="validate">Validate the message before serializing</param>
+        /// <remarks>Only use true when serializing a previously existing message</remarks>
+        /// <exception cref="HL7Exception">Error when validating or serializing the message</exception>
+        public async Task SerializeMessageAsync(TextWriter streamWriter, bool validate = false)
+        {
             if (validate && !this.validateMessage())
                 throw new HL7Exception("Failed to validate the updated message", HL7Exception.BadMessage);
 
-            var strMessage = new StringBuilder();
             List<Segment> _segListOrdered = getAllSegmentsInOrder();
 
             try
             {
-                _segListOrdered.ForEach(seg => seg.SerializeSegment(strMessage));
+                foreach (var seg in _segListOrdered)
+                {
+                    await seg.SerializeSegmentAsync(streamWriter);
+                }
 
-                return strMessage.ToString();
+                // _segListOrdered.ForEach(seg => seg.SerializeSegment(strMessage));
+                // return strMessage.ToString();
+
+                await streamWriter.FlushAsync();
             }
             catch (Exception ex)
             {
@@ -576,16 +616,31 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Retrieves all segments in the message in their original order.
+        /// </summary>
+        /// <returns>A list of all segments in the message.</returns>
         public List<Segment> Segments()
         {
             return getAllSegmentsInOrder();
         }
 
+        /// <summary>
+        /// Retrieves all segments in the message matching the specified segment name in their original order.
+        /// </summary>
+        /// <param name="segmentName">The name of the segment to retrieve (case-sensitive, e.g., "PID").</param>
+        /// <returns>A list of segments matching the specified name.</returns>
         public List<Segment> Segments(string segmentName)
         {
             return getAllSegmentsInOrder().FindAll(o=> o.Name.Equals(segmentName, StringComparison.Ordinal));
         }
 
+        /// <summary>
+        /// Retrieves the first segment in the message matching the specified segment name.
+        /// </summary>
+        /// <param name="segmentName">The name of the segment to retrieve (case-sensitive, e.g., "PID").</param>
+        /// <returns>The first matching segment.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no segment with the specified name exists.</exception>
         public Segment DefaultSegment(string segmentName)
         {
             return getAllSegmentsInOrder().First(o => o.Name.Equals(segmentName, StringComparison.Ordinal));

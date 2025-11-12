@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Efferent.HL7.V2.Test
@@ -209,6 +211,36 @@ OBX|1|TX|SCADOCTOR||^||||||F";
             {
                 Assert.Fail("Unexpected exception: " + ex.Message);
             }
+        }
+
+       [TestMethod]
+        public async Task SerializeToStream()
+        {
+            var expected = HL7Test.HL7_ORM.Trim();
+            var message = new Message(expected);
+            message.ParseMessage();
+            using var stream = new MemoryStream();
+            await message.SerializeMessageAsync(stream);
+            stream.Position = 0;
+            using var reader = new StreamReader(stream);
+            var asyncResult = await reader.ReadToEndAsync();
+            Assert.AreEqual(expected, asyncResult.Trim());
+        }
+
+        [TestMethod]
+        public async Task SerializeToStreamWriter()
+        {
+            var expected = HL7Test.HL7_ORM.Trim();
+            var message = new Message(expected);
+            message.ParseMessage();
+            using var stream = new MemoryStream();
+            using var writer = new StreamWriter(stream);
+            await message.SerializeMessageAsync(writer);
+            await writer.FlushAsync();
+            stream.Position = 0;
+            using var reader = new StreamReader(stream);
+            var asyncResult = await reader.ReadToEndAsync();
+            Assert.AreEqual(expected, asyncResult.Trim());
         }
     }
 }

@@ -7,35 +7,74 @@ using System.Text.RegularExpressions;
 
 namespace Efferent.HL7.V2
 {
+    /// <summary>
+    /// Provides utility methods for parsing, splitting, formatting, and serializing HL7 messages.
+    /// </summary>
     public static class MessageHelper
     {
         private static readonly string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
 
+        /// <summary>
+        /// Splits a string into a list of substrings based on the specified string delimiter.
+        /// </summary>
+        /// <param name="strStringToSplit">The string to split.</param>
+        /// <param name="splitBy">The string delimiter to split by.</param>
+        /// <param name="splitOptions">Options that specify whether to omit empty substrings from the result.</param>
+        /// <returns>A list of substrings obtained by splitting the input string.</returns>
         public static List<string> SplitString(string strStringToSplit, string splitBy, StringSplitOptions splitOptions = StringSplitOptions.None)
         {
             return strStringToSplit.Split(new string[] { splitBy }, splitOptions).ToList();
         }
 
+        /// <summary>
+        /// Splits a string into a list of substrings based on the specified character delimiter.
+        /// </summary>
+        /// <param name="strStringToSplit">The string to split.</param>
+        /// <param name="chSplitBy">The character delimiter to split by.</param>
+        /// <param name="splitOptions">Options that specify whether to omit empty substrings from the result.</param>
+        /// <returns>A list of substrings obtained by splitting the input string.</returns>
         public static List<string> SplitString(string strStringToSplit, char chSplitBy, StringSplitOptions splitOptions = StringSplitOptions.None)
         {
             return strStringToSplit.Split(new char[] { chSplitBy }, splitOptions).ToList();
         }
 
+        /// <summary>
+        /// Splits a string into a list of substrings based on any of the specified character delimiters.
+        /// </summary>
+        /// <param name="strStringToSplit">The string to split.</param>
+        /// <param name="chSplitBy">An array of character delimiters to split by.</param>
+        /// <param name="splitOptions">Options that specify whether to omit empty substrings from the result.</param>
+        /// <returns>A list of substrings obtained by splitting the input string.</returns>
         public static List<string> SplitString(string strStringToSplit, char[] chSplitBy, StringSplitOptions splitOptions = StringSplitOptions.None)
         {
             return strStringToSplit.Split(chSplitBy, splitOptions).ToList();
         }
 
+        /// <summary>
+        /// Splits an HL7 message string into its component segments.
+        /// </summary>
+        /// <param name="message">The HL7 message string to split.</param>
+        /// <returns>A list of segment strings extracted from the message, excluding empty or whitespace-only segments.</returns>
         public static List<string> SplitMessage(string message)
         {
             return message.Split(lineSeparators, StringSplitOptions.None).Where(m => !string.IsNullOrWhiteSpace(m)).ToList();
         }
 
+        /// <summary>
+        /// Formats a <see cref="DateTime"/> value as an HL7 long date string including fractional seconds.
+        /// </summary>
+        /// <param name="dt">The <see cref="DateTime"/> value to format.</param>
+        /// <returns>A string representation of the date and time in the "yyyyMMddHHmmss.FFFF" HL7 format.</returns>
         public static string LongDateWithFractionOfSecond(DateTime dt)
         {
             return dt.ToString("yyyyMMddHHmmss.FFFF", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Extracts HL7 messages framed with MLLP delimiters from a string containing one or more concatenated messages.
+        /// </summary>
+        /// <param name="messages">The string containing one or more MLLP-framed HL7 messages.</param>
+        /// <returns>An array of HL7 message strings extracted from within the MLLP framing characters.</returns>
         public static string[] ExtractMessages(string messages)
         {
             var expr = "\x0B(.*?)\x1C\x0D";
@@ -92,8 +131,29 @@ namespace Efferent.HL7.V2
         /// <param name="offset">The timezone offset extracted from the date time string.</param>
         /// <param name="throwException">If <c>true</c>, throws an exception on parse failure; if <c>false</c>, returns <c>null</c>.</param>
         /// <param name="applyOffset"><c>true</c> to apply the timezone offset and return UTC; <c>false</c> (default) to ignore it.</param>
-        /// <inheritdoc cref="ParseDateTime(string, bool, bool)" path="/returns"/>
-        /// <inheritdoc cref="ParseDateTime(string, bool, bool)" path="/remarks"/>
+        /// <returns>
+        /// A <see cref="DateTime"/> object if parsing succeeds, or <c>null</c> if parsing fails and <paramref name="throwException"/> is <c>false</c>.
+        /// When <paramref name="applyOffset"/> is <c>true</c>, returns <see cref="DateTimeKind.Utc"/>.
+        /// When <paramref name="applyOffset"/> is <c>false</c>, returns <see cref="DateTimeKind.Unspecified"/>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// When applying the timezone offset, the parsed DateTime is treated at UTC to begin with, and then the offset is subtracted.
+        /// </para>
+        /// <para>
+        /// <strong>Timezone Handling:</strong>
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>When <paramref name="applyOffset"/> is <c>true</c>: The method treats the parsed DateTime as being in the specified timezone, then converts it to UTC by subtracting the offset.</description></item>
+        /// <item><description>When <paramref name="applyOffset"/> is <c>false</c>: The timezone offset is ignored, and the DateTime is returned as <see cref="DateTimeKind.Unspecified"/>.</description></item>
+        /// <item><description>If no timezone is specified in the input string, a zero offset is assumed.</description></item>
+        /// </list>
+        /// <para>
+        /// <strong>Important:</strong> When <paramref name="applyOffset"/> is <c>false</c>, the returned <see cref="DateTimeKind.Unspecified"/> DateTime 
+        /// will be treated as local time by .NET methods. This can cause inconsistent behavior across different system timezones. 
+        /// It is recommended to use <paramref name="applyOffset"/> = <c>true</c> unless you have specific requirements for preserving the original timezone context.
+        /// </para>
+        /// </remarks>
         /// <exception cref="FormatException">Thrown when <paramref name="throwException"/> is <c>true</c> and the input string is not in a valid HL7 date time format.</exception>
         public static DateTime? ParseDateTime(string dateTimeString, out TimeSpan offset, bool throwException = false, bool applyOffset = false)
         {
@@ -141,11 +201,11 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Serialize string to MLLP escaped byte array
+        /// Serializes an HL7 message string into an MLLP (Minimal Lower Layer Protocol) framed byte array.
         /// </summary>
-        /// <param name="message">String to serialize</param>
-        /// <param name="encoding">Text encoder (optional)</param>
-        /// <returns>MLLP escaped byte array</returns>
+        /// <param name="message">The HL7 message string to serialize.</param>
+        /// <param name="encoding">The text encoding to use for the message string. Defaults to UTF-8 if <c>null</c>.</param>
+        /// <returns>A byte array containing the MLLP-framed HL7 message, including start block, end block, and carriage return delimiters.</returns>
         public static byte[] GetMLLP(string message, Encoding encoding = null)
         {
             if (encoding == null)

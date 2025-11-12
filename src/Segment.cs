@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Efferent.HL7.V2
 {
@@ -9,14 +11,26 @@ namespace Efferent.HL7.V2
         internal FieldCollection FieldList { get; set; }
         internal int SequenceNo { get; set; }
 
+        /// <summary>
+        /// Gets or sets the name of the HL7 segment.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Segment"/> class with the specified encoding.
+        /// </summary>
+        /// <param name="encoding">The HL7 encoding rules to use for this segment.</param>
         public Segment(HL7Encoding encoding)
         {
             this.FieldList = new FieldCollection();
             this.Encoding = encoding;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Segment"/> class with the specified name and encoding.
+        /// </summary>
+        /// <param name="name">The name of the segment (e.g., "MSH", "PID").</param>
+        /// <param name="encoding">The HL7 encoding rules to use for this segment.</param>
         public Segment(string name, HL7Encoding encoding)
         {
             this.FieldList = new FieldCollection();
@@ -50,6 +64,10 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Creates a deep copy of the current segment, including all its fields and encoding.
+        /// </summary>
+        /// <returns>A new <see cref="Segment"/> instance with the same content and encoding.</returns>
         public Segment DeepCopy()
         {
             var newSegment = new Segment(this.Name, this.Encoding);
@@ -58,16 +76,29 @@ namespace Efferent.HL7.V2
             return newSegment;
         }
 
+        /// <summary>
+        /// Adds a new empty field to the segment.
+        /// </summary>
         public void AddEmptyField()
         {
             this.AddNewField(string.Empty);
         }
 
+        /// <summary>
+        /// Adds a new field with the specified content at the end or at the specified position.
+        /// </summary>
+        /// <param name="content">The string content of the new field.</param>
+        /// <param name="position">The one-based position to insert the field at; if -1, adds at the end.</param>
         public void AddNewField(string content, int position = -1)
         {
             this.AddNewField(new Field(content, this.Encoding), position);
         }
 
+        /// <summary>
+        /// Adds a new field with the specified content and delimiter flag.
+        /// </summary>
+        /// <param name="content">The string content of the new field.</param>
+        /// <param name="isDelimiters">If true, marks the field as a delimiters field to prevent decoding.</param>
         public void AddNewField(string content, bool isDelimiters)
         {
             var newField = new Field(this.Encoding);
@@ -79,6 +110,13 @@ namespace Efferent.HL7.V2
             this.AddNewField(newField, -1);
         }
 
+        /// <summary>
+        /// Adds a new <see cref="Field"/> to the segment at the specified position or at the end.
+        /// </summary>
+        /// <param name="field">The <see cref="Field"/> object to add.</param>
+        /// <param name="position">The one-based position to insert the field at; if -1, adds at the end.</param>
+        /// <returns>True if the field was added successfully.</returns>
+        /// <exception cref="HL7Exception">Thrown if the field cannot be added to the segment.</exception>
         public bool AddNewField(Field field, int position = -1)
         {
             try
@@ -101,6 +139,12 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Retrieves the field at the specified one-based position within the segment.
+        /// </summary>
+        /// <param name="position">The one-based position of the field to retrieve.</param>
+        /// <returns>The <see cref="Field"/> at the specified position.</returns>
+        /// <exception cref="HL7Exception">Thrown if the field at the specified position is not available.</exception>
         public Field Fields(int position)
         {
             position--;
@@ -115,39 +159,60 @@ namespace Efferent.HL7.V2
             }
         }
 
+        /// <summary>
+        /// Gets all fields contained within the segment.
+        /// </summary>
+        /// <returns>A list of all <see cref="Field"/> objects in the segment.</returns>
         public List<Field> GetAllFields()
         {
             return this.FieldList;
         }
 
+        /// <summary>
+        /// Gets the sequence number of the segment within the message.
+        /// </summary>
+        /// <returns>The sequence number as an integer.</returns>
         public int GetSequenceNo()
         {
             return this.SequenceNo;
         }
 
         /// <summary>
-        /// Serializes a segment into a string with proper encoding
+        /// Serializes the segment into a string builder with proper HL7 encoding.
         /// </summary>
-        /// <param name="strMessage">A StringBuilder to write on</param>
+        /// <param name="strMessage">The <see cref="StringBuilder"/> to write the serialized segment to.</param>
         public void SerializeSegment(StringBuilder strMessage)
         {
-            strMessage.Append(this.Name);
+            using (var writer = new StringWriter(strMessage))
+            {
+                this.SerializeSegmentAsync(writer).GetAwaiter().GetResult();
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously serializes the segment into a <see cref="TextWriter"/> with proper HL7 encoding.
+        /// </summary>
+        /// <param name="writer">The <see cref="TextWriter"/> to write the serialized segment to.</param>
+        /// <returns>A task representing the asynchronous serialization operation.</returns>
+        public async Task SerializeSegmentAsync(TextWriter writer)
+        {        
+            await writer.WriteAsync(this.Name);
 
             if (this.FieldList.Count > 0)
-                strMessage.Append(Encoding.FieldDelimiter);
+                await writer.WriteAsync(Encoding.FieldDelimiter);
 
             int startField = this.Name == "MSH" ? 1 : 0;
 
             for (int i = startField; i < this.FieldList.Count; i++)
             {
                 if (i > startField)
-                    strMessage.Append(Encoding.FieldDelimiter);
+                    await writer.WriteAsync(Encoding.FieldDelimiter);
 
                 var field = this.FieldList[i];
 
                 if (field.IsDelimitersField)
                 {
-                    strMessage.Append(field.UndecodedValue);
+                    await writer.WriteAsync(field.UndecodedValue);
                     continue;
                 }
 
@@ -156,18 +221,18 @@ namespace Efferent.HL7.V2
                     for (int j = 0; j < field.RepetitionList.Count; j++)
                     {
                         if (j > 0)
-                            strMessage.Append(Encoding.RepeatDelimiter);
+                            await writer.WriteAsync(Encoding.RepeatDelimiter);
 
-                        field.RepetitionList[j].SerializeField(strMessage);
+                        await field.RepetitionList[j].SerializeFieldAsync(writer);
                     }
                 }
                 else
                 {
-                    field.SerializeField(strMessage);
+                    await field.SerializeFieldAsync(writer);
                 }
             }
 
-            strMessage.Append(Encoding.SegmentDelimiter);
+            await writer.WriteAsync(Encoding.SegmentDelimiter);
         }
     }
 }

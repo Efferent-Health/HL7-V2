@@ -36,15 +36,12 @@ namespace Benchmarks
             {
                 var baseJob = Job.ShortRun;
 
-                AddJob(baseJob.WithNuGet("HL7-V2", "2.39").WithRuntime(CoreRuntime.Core80).WithId("Net8 Nuget").AsBaseline());
-                AddJob(baseJob.WithNuGet("HL7-V2", "2.39").WithRuntime(ClrRuntime.Net48).WithId("Net4.8 Nuget"));
-                
-                AddJob(baseJob.WithRuntime(ClrRuntime.Net48).WithCustomBuildConfiguration("LOCAL_CODE")
-                    .WithId("Net4.8 Local")); // custom config to include/exclude nuget reference or target project reference locally
-                
-                AddJob(baseJob.WithRuntime(CoreRuntime.Core80).WithCustomBuildConfiguration("LOCAL_CODE")
-                    .WithId("Net8 Local")); // custom config to include/exclude nuget reference or target project reference locally
+                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=2.39").WithRuntime(CoreRuntime.Core80).WithId("Net8 Nuget").AsBaseline());
+                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=2.39").WithRuntime(ClrRuntime.Net48).WithId("Net4.8 Nuget"));
 
+                // custom config to include/exclude nuget reference or target project reference locally
+                AddJob(baseJob.WithRuntime(ClrRuntime.Net48).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net4.8 Local"));
+                AddJob(baseJob.WithRuntime(CoreRuntime.Core80).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net8 Local"));
             }
         }
 
