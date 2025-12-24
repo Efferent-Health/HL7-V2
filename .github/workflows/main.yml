@@ -12,40 +12,43 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dotnet: [ '8.0.x', '9.0.x', '10.0.x' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Setup .NET Core
+
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
-      - name: Compile source (.NET 8 + .NETStandard)
-        run: |
-          dotnet build src/HL7-V2.csproj --configuration Release
-          dotnet build src/HL7-V2.csproj --configuration Release -f netstandard2.0
-      - name: Run unit tests (.NET 8 + .NETStandard)
-        run: |
-          dotnet test test/HL7Test.csproj --configuration Release --logger:trx
-          dotnet test test/HL7Test.csproj --configuration Release --logger:trx -f netstandard2.0
+          dotnet-version: ${{ matrix.dotnet }}
+
+      - name: Compile source
+        run: dotnet build src/HL7-V2.csproj --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test test/HL7Test.csproj --configuration Release --logger:trx
         env:
           TEST_TITLE: HL7-V2 unit test
 
   deploy:
     runs-on: windows-latest
     needs: build
-    #if: contains(github.event.head_commit.modified, 'src/HL7-V2.csproj') || contains(github.event.head_commit.added, 'src/HL7-V2.csproj') || contains(github.event.head_commit.renamed, 'src/HL7-V2.csproj')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Setup .NET Core
+
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
+
       - name: Prepare NuGet package
         run: dotnet pack src/HL7-V2.csproj --configuration Release
+
       - name: Publish NuGet package
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: |
-          dotnet nuget push "src/bin/Release/**/*.nupkg" --api-key "$env:NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json"
-      #dotnet nuget push "src/bin/Release/*.nupkg" -k $NUGET_API_KEY -s https://api.nuget.org/v3/index.json
+        run: dotnet nuget push "src/bin/Release/**/*.nupkg" --api-key "$env:NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json"

@@ -12,9 +12,9 @@ It is not tied to any particular version of HL7 nor validates against one.
 
 ## Usage and compatibility
 
-This library is distributed via [nuget](https://www.nuget.org/packages/HL7-v2/latest) and targets two frameworks:
+This library is distributed via [nuget](https://www.nuget.org/packages/HL7-v2/latest) and targets three frameworks:
 - .NET Standard 2.0 for maximum compability, covering more than 40 .NET frameworks
-- .NET 8.0 for better performance under the new Microsoft's cross-platform framework
+- .NET 8.0, 9.0 and 10.0 for better performance under the new Microsoft's cross-platform framework
 
 For using the classes and methods mentioned below, declare de following namespace:
 
