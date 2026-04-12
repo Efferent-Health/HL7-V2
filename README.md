@@ -27,6 +27,8 @@ using Efferent.HL7.V2;
 Read the full documentation in the [wiki page](https://github.com/Efferent-Health/HL7-V2/wiki/Composing-a-new-HL7-message).
 
 ## Credits
-This library has taken Jayant Singh's HL7 parser as its foundation: https://github.com/j4jayant/hl7-cSharp-parser
+This library superseeds a previous github project: https://github.com/Efferent-Health/HL7-dotnetcore (read [#1](https://github.com/Efferent-Health/HL7-V2/issues/1))
+
+It has taken Jayant Singh's HL7 parser as its foundation: https://github.com/j4jayant/hl7-cSharp-parser
 
 The field encoding and decoding methods have been based on: https://github.com/elomagic/hl7inspector
