@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Copyright>(c) Efferent, Inc.</Copyright>
-    <VersionPrefix>3.7.1</VersionPrefix>
+    <VersionPrefix>3.7.2</VersionPrefix>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>HL7Test</AssemblyName>
     <PackageId>HL7Test</PackageId>
