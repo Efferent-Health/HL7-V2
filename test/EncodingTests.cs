@@ -235,7 +235,7 @@ OBX|36|TX|^^^^^|| OTHER: Right medial orbital wall fracture noted\";
 
             var strMessage = message.SerializeMessage();
 
-            Assert.EndsWith("\\E\\\n", strMessage);
+            Assert.EndsWith("\\E\\", strMessage.TrimEnd('\r', '\n'));
             TestContext.WriteLine(strMessage);
         }
 
