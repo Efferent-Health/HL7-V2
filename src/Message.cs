@@ -816,6 +816,10 @@ namespace Efferent.HL7.V2
 
                     this.HL7Message = string.Join(this.Encoding.SegmentDelimiter, allSegments) + this.Encoding.SegmentDelimiter;
 
+                    string _fieldDelimiters_Message = this.allSegments[0].Substring(3, 8 - 3);
+                    this.Encoding.EvaluateDelimiters(_fieldDelimiters_Message);
+                    this.DecomposeMultibyteHexSequences();
+
                     // Check Segment Name & 4th character of each segment
                     char fourthCharMSH = HL7Message[3];
 
@@ -833,9 +837,6 @@ namespace Efferent.HL7.V2
                         if (strSegment.Length > 3 && fourthCharMSH != strSegment[3])
                             throw new HL7Exception("Invalid segment found: " + strSegment, HL7Exception.BadMessage);
                     }
-
-                    string _fieldDelimiters_Message = this.allSegments[0].Substring(3, 8 - 3);
-                    this.Encoding.EvaluateDelimiters(_fieldDelimiters_Message);
 
                     // Count field separators, MSH.12 is required so there should be at least 11 field separators in MSH
                     int countFieldSepInMSH = this.allSegments[0].Count(f => f == Encoding.FieldDelimiter);
@@ -965,30 +966,83 @@ namespace Efferent.HL7.V2
         }
 
         /// <summary>
-        /// Decodes hexadecimal escape sequences from all message lines for comparison purposes
+        /// Decodes or normalizes hexadecimal escape sequences from all message lines.
         /// </summary>
         /// <param name="message">Array of message lines</param>
-        private void DecodeHexaSequences(string[] message)
+        private bool DecodeHexaSequences(IList<string> message, bool decomposeMultibyteLineBreaks = false)
         {
             var esc = "\\x" + ((int)this.Encoding.EscapeCharacter).ToString("X2", CultureInfo.InvariantCulture);
             var regex = new Regex(esc + "X([0-9A-Fa-f]*)" + esc);
+            bool hasChanged = false;
 
-            for (int i=0; i<message.Length; i++)
+            for (int i=0; i<message.Count; i++)
             {
                 if (!message[i].Contains(Encoding.EscapeCharacter))
                     continue;
 
-                message[i] = regex.Replace(message[i], match =>
+                string replaced = regex.Replace(message[i], match =>
                 {
                     string hexValue = match.Groups[1].Value;
 
+                    if (decomposeMultibyteLineBreaks)
+                        return DecomposeMultibyteHexSequence(match.Value, hexValue);
+
                     // Does not decode CR or LF
-                    if (hexValue != "0D" && hexValue != "0A")
+                    if (!IsEncodedLineBreakByte(hexValue))
                         return HL7Encoding.DecodeHexString(hexValue);
-                    else
-                        return match.Value;
+
+                    return match.Value;
                 });
+
+                if (!message[i].Equals(replaced, StringComparison.Ordinal))
+                {
+                    message[i] = replaced;
+                    hasChanged = true;
+                }
             }
-        }        
+
+            return hasChanged;
+        }
+
+        /// <summary>
+        /// Decomposes multi-byte hexadecimal CR/LF escape sequences to the same one-byte escape form used during serialization.
+        /// </summary>
+        private void DecomposeMultibyteHexSequences()
+        {
+            if (this.Encoding.EscapeCharacter == (char)0 || this.allSegments == null || this.allSegments.Count == 0)
+                return;
+
+            if (DecodeHexaSequences(this.allSegments, decomposeMultibyteLineBreaks: true))
+                this.HL7Message = string.Join(this.Encoding.SegmentDelimiter, allSegments) + this.Encoding.SegmentDelimiter;
+        }
+
+        private string DecomposeMultibyteHexSequence(string matchValue, string hexValue)
+        {
+            if (hexValue.Length <= 2 || hexValue.Length % 2 != 0 || !ContainsEncodedLineBreak(hexValue))
+                return matchValue;
+
+            var result = new StringBuilder(matchValue.Length);
+
+            for (int i = 0; i < hexValue.Length; i += 2)
+            {
+                result.Append(this.Encoding.EscapeCharacter);
+                result.Append('X');
+                result.Append(hexValue, i, 2);
+                result.Append(this.Encoding.EscapeCharacter);
+            }
+
+            return result.ToString();
+        }
+
+        private static bool ContainsEncodedLineBreak(string hexValue)
+        {
+            return Enumerable.Range(0, hexValue.Length / 2)
+                .Any(i => IsEncodedLineBreakByte(hexValue.Substring(i * 2, 2)));
+        }
+
+        private static bool IsEncodedLineBreakByte(string hexValue)
+        {
+            return hexValue is "0D" or "0A" or "0d" or "0a";
+        }
     }
 }

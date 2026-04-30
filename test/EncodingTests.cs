@@ -274,6 +274,23 @@ PV1||O|80D18802^^^SAMPLE ORTHO URGENT CARE||||1905555652^JANE^D^DOE||||||||||103
         }
 
         [TestMethod]
+        public void ParseMultibyteEncoding()
+        {
+            const string encoded = @"MSH|^~\&|EPIC|StJohn|CATH|StJohn|20061019172719||ADT^A08|MSGID12349876|P|2.3
+PID||0493575^^^2^ID 1|454721||DOE^JOHN^^^^|DOE^JOHN^^^^|19480203|M||B|254 MYSTREET AVE^^MYTOWN^OH^44123^USA||(216)123-4567|||M|NON|400003403~1129086|
+PV1||O|OP^PAREG^^^^^^^^||||277^MYLASTNAME^BONNIE^^^^|||||||||| ||2688684|||||||||||||||||||||||||199912271408||||||002376853
+GT1|1|123456789|DOE^JOHN^^^^^||254 MYSTREET AVE^APT #204 - P: 555-555-1234\X0D0A\254 MYSTREET AVE S^MYTOWN^OH^44123^US^^^MYTOWN|(555)555-1234^^7^^^123^1234567~(555)555-1234^^1^^^555^1234567||19550101|F|P/|15|555-55-5555|||||^^^^^US|||Re";
+
+            var message = new Message(encoded);
+
+            var isParsed = message.ParseMessage();
+            Assert.IsTrue(isParsed);
+            Assert.DoesNotContain(@"\X0D0A\", message.HL7Message);
+            Assert.Contains(@"\X0D\\X0A\", message.HL7Message);
+            Assert.AreEqual(expected: message.HL7Message, actual: message.SerializeMessage());
+        }
+
+        [TestMethod]
         public void MessageWithNullsIsReversable()
         {
             const string sampleMessage = "MSH|^~\\&|SA|SF|RA|RF|20110613083617||ADT^A04|123|P|2.7||||\r\nEVN|A04|20110613083617||\"\"\r\n";
