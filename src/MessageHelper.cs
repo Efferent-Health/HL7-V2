@@ -10,9 +10,18 @@ namespace Efferent.HL7.V2
     /// <summary>
     /// Provides utility methods for parsing, splitting, formatting, and serializing HL7 messages.
     /// </summary>
-    public static class MessageHelper
+    public static partial class MessageHelper
     {
-        private static readonly string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
+        private static readonly string[] LineSeparators = { "\r\n", "\n\r", "\r", "\n" };
+
+        private const string DATETIME_EXPR = @"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$";
+        
+#if NETSTANDARD2_0
+        private static readonly Regex DateTimeRegex = new Regex(DATETIME_EXPR, RegexOptions.Singleline | RegexOptions.Compiled);
+#else
+        [GeneratedRegex(DATETIME_EXPR, RegexOptions.Singleline)]
+        private static partial Regex DateTimeRegex();
+#endif
 
         /// <summary>
         /// Splits a string into a list of substrings based on the specified string delimiter.
@@ -23,7 +32,11 @@ namespace Efferent.HL7.V2
         /// <returns>A list of substrings obtained by splitting the input string.</returns>
         public static List<string> SplitString(string strStringToSplit, string splitBy, StringSplitOptions splitOptions = StringSplitOptions.None)
         {
+#if NETSTANDARD2_0
             return strStringToSplit.Split(new string[] { splitBy }, splitOptions).ToList();
+#else
+            return strStringToSplit.Split(splitBy, splitOptions).ToList();
+#endif
         }
 
         /// <summary>
@@ -35,7 +48,11 @@ namespace Efferent.HL7.V2
         /// <returns>A list of substrings obtained by splitting the input string.</returns>
         public static List<string> SplitString(string strStringToSplit, char chSplitBy, StringSplitOptions splitOptions = StringSplitOptions.None)
         {
+#if NETSTANDARD2_0
             return strStringToSplit.Split(new char[] { chSplitBy }, splitOptions).ToList();
+#else
+            return strStringToSplit.Split(chSplitBy, splitOptions).ToList();
+#endif
         }
 
         /// <summary>
@@ -57,7 +74,7 @@ namespace Efferent.HL7.V2
         /// <returns>A list of segment strings extracted from the message, excluding empty or whitespace-only segments.</returns>
         public static List<string> SplitMessage(string message)
         {
-            return message.Split(lineSeparators, StringSplitOptions.None).Where(m => !string.IsNullOrWhiteSpace(m)).ToList();
+            return message.Split(LineSeparators, StringSplitOptions.None).Where(m => !string.IsNullOrWhiteSpace(m)).ToList();
         }
 
         /// <summary>
@@ -121,9 +138,9 @@ namespace Efferent.HL7.V2
         /// <inheritdoc cref="ParseDateTime(string, out TimeZone, bool, bool)" path="/exception[@cref='FormatException']"/>
         public static DateTime? ParseDateTime(string dateTimeString, bool throwException = false, bool applyOffset = true)
         {
-            return ParseDateTime(dateTimeString, out TimeSpan offset, throwException, applyOffset);
+            return ParseDateTime(dateTimeString, out var offset, throwException, applyOffset);
         }
-
+        
         /// <summary>
         /// Parses an HL7 date time string into a <see cref="DateTime"/> object and extracts the timezone offset.
         /// </summary>
@@ -157,39 +174,52 @@ namespace Efferent.HL7.V2
         /// <exception cref="FormatException">Thrown when <paramref name="throwException"/> is <c>true</c> and the input string is not in a valid HL7 date time format.</exception>
         public static DateTime? ParseDateTime(string dateTimeString, out TimeSpan offset, bool throwException = false, bool applyOffset = false)
         {
-            var expr = @"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$";
-            var matches = Regex.Matches(dateTimeString, expr, RegexOptions.Singleline);
+            offset = TimeSpan.Zero;
 
-            offset = new TimeSpan();
-
+#if NETSTANDARD2_0
+            var match = DateTimeRegex.Match(dateTimeString);
+#else
+            var match = DateTimeRegex().Match(dateTimeString);
+#endif
+            
+            if (!match.Success) 
+            {
+                return throwException 
+                    ? throw new FormatException("Invalid date format") 
+                    : null;
+            }
+            
             try
             {
-                if (matches.Count != 1)
-                    throw new FormatException("Invalid date format");
+                var groups = match.Groups;
 
-                var groups = matches[0].Groups;
+#if NETSTANDARD2_0
                 int year = int.Parse(groups[1].Value, CultureInfo.InvariantCulture);
                 int month = groups[2].Success ? int.Parse(groups[2].Value, CultureInfo.InvariantCulture) : 1;
                 int day = groups[3].Success ? int.Parse(groups[3].Value, CultureInfo.InvariantCulture) : 1;
                 int hours = groups[4].Success ? int.Parse(groups[4].Value, CultureInfo.InvariantCulture) : 0;
                 int mins = groups[5].Success ? int.Parse(groups[5].Value, CultureInfo.InvariantCulture) : 0;
-
                 double secs = groups[6].Success ? double.Parse(groups[6].Value, CultureInfo.InvariantCulture) : 0;
-               
                 int tzh = groups[7].Success ? int.Parse(groups[7].Value, CultureInfo.InvariantCulture) : 0;
                 int tzm = groups[8].Success ? int.Parse(groups[8].Value, CultureInfo.InvariantCulture) : 0;
+#else
+                int year = int.Parse(groups[1].ValueSpan, CultureInfo.InvariantCulture);
+                int month = groups[2].Success ? int.Parse(groups[2].ValueSpan, CultureInfo.InvariantCulture) : 1;
+                int day = groups[3].Success ? int.Parse(groups[3].ValueSpan, CultureInfo.InvariantCulture) : 1;
+                int hours = groups[4].Success ? int.Parse(groups[4].ValueSpan, CultureInfo.InvariantCulture) : 0;
+                int mins = groups[5].Success ? int.Parse(groups[5].ValueSpan, CultureInfo.InvariantCulture) : 0;
+                double secs = groups[6].Success ? double.Parse(groups[6].ValueSpan, CultureInfo.InvariantCulture) : 0;
+                int tzh = groups[7].Success ? int.Parse(groups[7].ValueSpan, CultureInfo.InvariantCulture) : 0;
+                int tzm = groups[8].Success ? int.Parse(groups[8].ValueSpan, CultureInfo.InvariantCulture) : 0;
+#endif
+                
                 offset = new TimeSpan(tzh, tzm, 0);
 
-                if (applyOffset)
-                {
+                return applyOffset ?
                     // When applying offset, convert to UTC
-                    return new DateTime(year, month, day, hours, mins, 0, DateTimeKind.Utc).AddSeconds(secs).Subtract(offset);
-                }
-                else
-                {
+                    new DateTime(year, month, day, hours, mins, 0, DateTimeKind.Utc).AddSeconds(secs).Subtract(offset) :
                     // When not applying offset, return as Unspecified and leave to the caller to handle
-                    return new DateTime(year, month, day, hours, mins, 0).AddSeconds(secs);
-                }
+                    new DateTime(year, month, day, hours, mins, 0).AddSeconds(secs);
             }
             catch
             {
@@ -199,7 +229,7 @@ namespace Efferent.HL7.V2
                 return null;
             }
         }
-
+        
         /// <summary>
         /// Serializes an HL7 message string into an MLLP (Minimal Lower Layer Protocol) framed byte array.
         /// </summary>

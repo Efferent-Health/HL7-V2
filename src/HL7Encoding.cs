@@ -9,28 +9,60 @@ namespace Efferent.HL7.V2
     /// Manages HL7 encoding and decoding rules, including field, component, repetition, escape, and subcomponent delimiters.
     /// Provides methods to encode and decode HL7 message content according to these delimiters.
     /// </summary>
-    public class HL7Encoding
+    public class HL7Encoding 
     {
+        private bool _invalidChars = true;
+        
+        private char _fieldDelimiter = '|';        // \F\
+        private char _componentDelimiter = '^';    // \S\
+        private char _repeatDelimiter = '~';       // \R\
+        private char _escapeCharacter = '\\';      // \E\
+        private char _subComponentDelimiter = '&'; // \T\
+
         /// <summary>
         /// Gets or sets the field delimiter character used to separate fields within a segment.
         /// </summary>
-        public char FieldDelimiter { get; set; } = '|';        // \F\
+        public char FieldDelimiter 
+        {
+            get => _fieldDelimiter;
+            set { _fieldDelimiter = value; _invalidChars = true; }
+        }
+
         /// <summary>
         /// Gets or sets the component delimiter character used to separate components within a field.
         /// </summary>
-        public char ComponentDelimiter { get; set; } = '^';    // \S\
+        public char ComponentDelimiter 
+        {
+            get => _componentDelimiter;
+            set { _componentDelimiter = value; _invalidChars = true; }
+        }
+
         /// <summary>
         /// Gets or sets the repeat delimiter character used to separate repeated fields or components.
         /// </summary>
-        public char RepeatDelimiter { get; set; } = '~';       // \R\
+        public char RepeatDelimiter 
+        {
+            get => _repeatDelimiter;
+            set { _repeatDelimiter = value; _invalidChars = true; }
+        }
+
         /// <summary>
         /// Gets or sets the escape character used to denote escaped sequences within HL7 content.
         /// </summary>
-        public char EscapeCharacter { get; set; } = '\\';      // \E\
+        public char EscapeCharacter 
+        {
+            get => _escapeCharacter;
+            set { _escapeCharacter = value; _invalidChars = true; }
+        }
+
         /// <summary>
         /// Gets or sets the subcomponent delimiter character used to separate subcomponents within a component.
         /// </summary>
-        public char SubComponentDelimiter { get; set; } = '&'; // \T\
+        public char SubComponentDelimiter 
+        {
+            get => _subComponentDelimiter;
+            set { _subComponentDelimiter = value; _invalidChars = true; }
+        }
         /// <summary>
         /// Gets or sets the segment delimiter string used to separate segments within an HL7 message.
         /// </summary>
@@ -47,10 +79,16 @@ namespace Efferent.HL7.V2
         private static readonly string[] _segmentDelimiters = { "\r\n", "\n\r", "\r", "\n" };
         private char[] _charsThatMightNeedEncoding;
 
-        public HL7Encoding()
+        private char[] CharsThatMightNeedEncoding() 
         {
-            // set the defaults
-            _charsThatMightNeedEncoding = new[] { '<', '\r', '\n', FieldDelimiter, ComponentDelimiter, RepeatDelimiter, EscapeCharacter, SubComponentDelimiter };
+            if (_invalidChars) 
+            {
+                _charsThatMightNeedEncoding = new[] { '<', '\r', '\n', FieldDelimiter, ComponentDelimiter, RepeatDelimiter, EscapeCharacter, SubComponentDelimiter };
+
+                _invalidChars = false;
+            }
+            
+            return _charsThatMightNeedEncoding;
         }
 
         /// <summary>
@@ -73,7 +111,6 @@ namespace Efferent.HL7.V2
                 this.EscapeCharacter = delimiters[3];
                 this.SubComponentDelimiter = delimiters[4];
             }
-            _charsThatMightNeedEncoding = new[] { '<', '\r', '\n', FieldDelimiter, ComponentDelimiter, RepeatDelimiter, EscapeCharacter, SubComponentDelimiter };
         }
 
         /// <summary>
@@ -100,7 +137,7 @@ namespace Efferent.HL7.V2
         /// </summary>
         /// <param name="val">The string value to encode.</param>
         /// <returns>The encoded string with special characters escaped.</returns>
-        public  string Encode(string val)
+        public string Encode(string val)
         {
             if (val == null)
                 return PresentButNull;
@@ -109,9 +146,8 @@ namespace Efferent.HL7.V2
                 return val;
 
             // If there's nothing that needs encoding, just return the value as-is
-            // Disabled as it was breaking the CustomDelimiterTest() test method
-            // if (val.IndexOfAny(_charsThatMightNeedEncoding) < 0)
-            //     return val;
+             if (val.IndexOfAny(CharsThatMightNeedEncoding()) < 0)
+                 return val;
 
             var sb = new StringBuilder();
 

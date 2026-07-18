@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Efferent.HL7.V2
 {
-    public class Message
+    public partial class Message
     {
         private List<string> allSegments = null;
         internal Dictionary<string, List<Segment>> SegmentList { get; set; } = new Dictionary<string, List<Segment>>();
@@ -25,10 +25,30 @@ namespace Efferent.HL7.V2
         public HL7Encoding Encoding { get; set; } = new HL7Encoding();
 
         private static readonly char[] _queryDelimiter = ['.'];
-
-        private const string segmentRegex = @"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$";
-        private const string fieldRegex = @"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$";
-        private const string otherRegEx = @"^[1-9]([0-9]{1,2})?$";
+        
+        private const string SEGMENT_REGEX_EXPR = @"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$";
+        private const string FIELD_REGEX_EXPR = @"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$";
+        private const string OTHER_REG_EXPR = "^[1-9]([0-9]{1,2})?$";
+        
+        
+#if NETSTANDARD2_0
+        private static readonly Regex SegmentRegex = new Regex(SEGMENT_REGEX_EXPR, RegexOptions.Compiled);
+        private static readonly Regex FieldSegmentRegex = new Regex(FIELD_REGEX_EXPR, RegexOptions.Compiled);
+        private static readonly Regex OtherRegex = new Regex(OTHER_REG_EXPR, RegexOptions.Compiled);
+#else
+        [GeneratedRegex(SEGMENT_REGEX_EXPR)]
+        private static partial Regex SegmentRegexMethod();
+        [GeneratedRegex(FIELD_REGEX_EXPR)]
+        private static partial Regex FieldSegmentRegexMethod();
+        [GeneratedRegex(OTHER_REG_EXPR)]
+        private static partial Regex OtherRegexMethod();
+        
+        private static readonly Regex SegmentRegex = SegmentRegexMethod();
+        private static readonly Regex FieldSegmentRegex = FieldSegmentRegexMethod();
+        private static readonly Regex OtherRegex = OtherRegexMethod();
+#endif
+        
+        
 
         public Message()
         {
@@ -232,16 +252,16 @@ namespace Efferent.HL7.V2
 
             if (isValid)
             {
-                var matches = Regex.Matches(allComponents[0], segmentRegex);
+                var match = SegmentRegex.Match(allComponents[0]);
 
-                if (matches.Count < 1)
+                if (!match.Success)
                     throw new HL7Exception("Request format is not valid: " + strValueFormat);
 
-                segmentName = matches[0].Groups[1].Value;
+                segmentName = match.Groups[1].Value;
 
-                if (matches[0].Length > 3)
+                if (match.Length > 3)
                 {
-                    if (Int32.TryParse(matches[0].Groups[3].Value, out segmentOccurrence))
+                    if (int.TryParse(match.Groups[3].Value, out segmentOccurrence))
                         segmentOccurrence--;
                 }
 
@@ -251,9 +271,9 @@ namespace Efferent.HL7.V2
 
                     if (comCount == 4)
                     {
-                        if (Int32.TryParse(allComponents[2], out componentIndex))
+                        if (int.TryParse(allComponents[2], out componentIndex))
                         {
-                            if (Int32.TryParse(allComponents[3], out int subComponentIndex))
+                            if (int.TryParse(allComponents[3], out int subComponentIndex))
                             {
                                 try
                                 {
@@ -269,7 +289,7 @@ namespace Efferent.HL7.V2
                     }
                     else if (comCount == 3)
                     {
-                        if (Int32.TryParse(allComponents[2], out componentIndex))
+                        if (int.TryParse(allComponents[2], out componentIndex))
                         {
                             try
                             {
@@ -345,9 +365,9 @@ namespace Efferent.HL7.V2
                     {
                         if (comCount == 4)
                         {
-                            if (Int32.TryParse(allComponents[2], out componentIndex))
+                            if (int.TryParse(allComponents[2], out componentIndex))
                             {
-                                if (Int32.TryParse(allComponents[3], out int subComponentIndex))
+                                if (int.TryParse(allComponents[3], out int subComponentIndex))
                                 {
                                     try
                                     {
@@ -364,7 +384,7 @@ namespace Efferent.HL7.V2
                         }
                         else if (comCount == 3)
                         {
-                            if (Int32.TryParse(allComponents[2], out componentIndex))
+                            if (int.TryParse(allComponents[2], out componentIndex))
                             {
                                 try
                                 {
@@ -431,7 +451,7 @@ namespace Efferent.HL7.V2
                 {
                     try
                     {
-                        var segment = SegmentList[segmentName].First();
+                        var segment = SegmentList[segmentName][0];
                         var field = getField(segment, allComponents[1]);
 
                         isComponentized = field.IsComponentized;
@@ -469,7 +489,7 @@ namespace Efferent.HL7.V2
             if (isValid)
             {
                 var segmentName = allComponents[0];
-                var segment = SegmentList[segmentName].First();
+                var segment = SegmentList[segmentName][0];
 
                 if (comCount >= 2)
                 {
@@ -515,10 +535,10 @@ namespace Efferent.HL7.V2
                 {
                     try
                     {
-                        var segment = SegmentList[segmentName].First();
+                        var segment = SegmentList[segmentName][0];
                         var field = getField(segment, allComponents[1]);
 
-                        if (Int32.TryParse(allComponents[2], out int componentIndex))
+                        if (int.TryParse(allComponents[2], out int componentIndex))
                             isSubComponentized = field.ComponentList[componentIndex - 1].IsSubComponentized;
                     }
                     catch (Exception ex)
@@ -708,7 +728,7 @@ namespace Efferent.HL7.V2
             if (this.MessageStructure != "ACK")
             {
                 var dateString = MessageHelper.LongDateWithFractionOfSecond(DateTime.Now);
-                var msh = this.SegmentList["MSH"].First();
+                var msh = this.SegmentList["MSH"][0];
                 var delim = this.Encoding.FieldDelimiter;
 
                 response.Append("MSH").Append(this.Encoding.AllDelimiters).Append(delim).Append(msh.FieldList[4].Value).Append(delim).Append(msh.FieldList[5].Value).Append(delim)
@@ -738,23 +758,24 @@ namespace Efferent.HL7.V2
         /// <summary>
         /// Gets a field object within a segment by index
         /// </summary>
-        /// <param name="segment">The segment object to search in/param>
-        /// <param name="index">The index of the field within the segment/param>
+        /// <param name="segment">The segment object to search in</param>
+        /// <param name="index">The index of the field within the segment</param>
         /// <returns>A Field object</returns>
         private static Field getField(Segment segment, string index)
         {
             int repetition = 0;
-            var matches = Regex.Matches(index, fieldRegex);
 
-            if (matches.Count < 1)
+            var match = FieldSegmentRegex.Match(index);
+            
+            if (!match.Success)
                 throw new HL7Exception("Invalid field index");
 
-            if (Int32.TryParse(matches[0].Groups[1].Value, out int fieldIndex))
+            if (int.TryParse(match.Groups[1].Value, out int fieldIndex))
                 fieldIndex--;
 
-            if (matches[0].Length > 3)
+            if (match.Length > 3)
             {
-                if (Int32.TryParse(matches[0].Groups[3].Value, out repetition))
+                if (int.TryParse(match.Groups[3].Value, out repetition))
                     repetition--;
             }
 
@@ -771,17 +792,17 @@ namespace Efferent.HL7.V2
         /// <summary>
         /// Determines if a segment field has repetitions
         /// </summary>
-        /// <param name="segment">The segment object to search in/param>
-        /// <param name="index">The index of the field within the segment/param>
+        /// <param name="segment">The segment object to search in</param>
+        /// <param name="index">The index of the field within the segment</param>
         /// <returns>A boolean indicating whether the field has repetitions</returns>
         private static int getFieldRepetitions(Segment segment, string index)
         {
-            var matches = Regex.Matches(index, fieldRegex);
+            var match = FieldSegmentRegex.Match(index);
 
-            if (matches.Count < 1)
+            if (!match.Success)
                 return 0;
 
-            if (Int32.TryParse(matches[0].Groups[1].Value, out int fieldIndex))
+            if (int.TryParse(match.Groups[1].Value, out int fieldIndex))
                 fieldIndex--;
 
             var field = segment.FieldList[fieldIndex];
@@ -829,8 +850,9 @@ namespace Efferent.HL7.V2
                             continue;
 
                         string segmentName = strSegment.Substring(0, 3);
-                        bool isValidSegmentName = Regex.IsMatch(segmentName, segmentRegex);
 
+                        bool isValidSegmentName = SegmentRegex.IsMatch(segmentName);
+                        
                         if (!isValidSegmentName)
                             throw new HL7Exception("Invalid segment name found: " + strSegment, HL7Exception.BadMessage);
 
@@ -944,35 +966,49 @@ namespace Efferent.HL7.V2
 
             if (allComponents.Length > 0)
             {
-                if (Regex.IsMatch(allComponents[0], segmentRegex))
+                if (SegmentRegex.IsMatch(allComponents[0]))
                 {
                     for (int i = 1; i < allComponents.Length; i++)
                     {
-                        if (i == 1 && Regex.IsMatch(allComponents[i], fieldRegex))
+                        if (i == 1 && FieldSegmentRegex.IsMatch(allComponents[i]))
                             isValid = true;
-                        else if (i > 1 && Regex.IsMatch(allComponents[i], otherRegEx))
+                        else if (i > 1 && OtherRegex.IsMatch(allComponents[i]))
                             isValid = true;
                         else
                             return false;
                     }
-                }
-                else
-                {
-                    isValid = false;
                 }
             }
 
             return isValid;
         }
 
+        private Regex _hexSequenceRegex;
+        private char _hexSequenceEscapeChar;
+
+        private Regex GetHexSequenceRegex() 
+        {
+            var escChar = Encoding.EscapeCharacter;
+
+            // Stale cache
+            if (_hexSequenceRegex == null || _hexSequenceEscapeChar != escChar) 
+            {
+                var esc = "\\x" + ((int)Encoding.EscapeCharacter).ToString("X2", CultureInfo.InvariantCulture);
+                
+                _hexSequenceRegex = new Regex(esc + "X([0-9A-Fa-f]*)" + esc, RegexOptions.Compiled);
+                _hexSequenceEscapeChar = escChar;
+            }
+
+            return _hexSequenceRegex;
+        }
+        
         /// <summary>
         /// Decodes or normalizes hexadecimal escape sequences from all message lines.
         /// </summary>
         /// <param name="message">Array of message lines</param>
         private bool DecodeHexaSequences(IList<string> message, bool decomposeMultibyteLineBreaks = false)
         {
-            var esc = "\\x" + ((int)this.Encoding.EscapeCharacter).ToString("X2", CultureInfo.InvariantCulture);
-            var regex = new Regex(esc + "X([0-9A-Fa-f]*)" + esc);
+            var regex = GetHexSequenceRegex();
             bool hasChanged = false;
 
             for (int i=0; i<message.Count; i++)

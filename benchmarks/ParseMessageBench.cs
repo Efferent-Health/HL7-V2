@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 using BenchmarkDotNet.Attributes;
@@ -28,7 +29,7 @@ namespace Benchmarks
 | ParseMessageAndGetValues | Net8 Nuget   | .NET 8.0           | HL7-V2 2.39 | 47.40 us |  1.00 | 11.7798 | 1.9531 |  180.7 KB |        1.00 |
  */
 
-        internal static readonly string _sampleMessage = File.ReadAllText("Sample-Orm.txt");
+        internal static readonly string SampleMessage = File.ReadAllText("Sample-Orm.txt");
 
         private class Config : ManualConfig
         {
@@ -36,19 +37,23 @@ namespace Benchmarks
             {
                 var baseJob = Job.ShortRun;
 
-                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=2.39").WithRuntime(CoreRuntime.Core80).WithId("Net8 Nuget").AsBaseline());
-                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=2.39").WithRuntime(ClrRuntime.Net48).WithId("Net4.8 Nuget"));
+                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=3.7.3").WithRuntime(ClrRuntime.Net48).WithId("Net4.8 Nuget"));
+                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=3.7.3").WithRuntime(CoreRuntime.Core80).WithId("Net8 Nuget").AsBaseline());
+                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=3.7.3").WithRuntime(CoreRuntime.Core90).WithId("Net9 Nuget"));
+                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=3.7.3").WithRuntime(CoreRuntime.Core10_0).WithId("Net10 Nuget"));
 
                 // custom config to include/exclude nuget reference or target project reference locally
                 AddJob(baseJob.WithRuntime(ClrRuntime.Net48).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net4.8 Local"));
                 AddJob(baseJob.WithRuntime(CoreRuntime.Core80).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net8 Local"));
+                AddJob(baseJob.WithRuntime(CoreRuntime.Core90).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net9 Local"));
+                AddJob(baseJob.WithRuntime(CoreRuntime.Core10_0).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net10 Local"));
             }
         }
 
         [Benchmark]
         public void ParseMessageAndGetValues()
         {
-            var msg = new Message(_sampleMessage);
+            var msg = new Message(SampleMessage);
             msg.ParseMessage(true);
 
             var ack = msg.GetACK(true);
@@ -57,6 +62,23 @@ namespace Benchmarks
             string receivingApp = ack.GetValue("MSH.5");
             string receivingFacility = ack.GetValue("MSH.6");
             string messageType = ack.GetValue("MSH.9");
+        }
+
+        [Benchmark]
+        public DateTime? ParseDateTime() 
+        {
+            MessageHelper.ParseDateTime("   20151231234500.1234+2358   ");
+            MessageHelper.ParseDateTime("20151231234500.1234+2358");
+            MessageHelper.ParseDateTime("20151231234500.1234-2358");
+            MessageHelper.ParseDateTime("20151231234500.1234");
+            MessageHelper.ParseDateTime("20151231234500.12");
+            MessageHelper.ParseDateTime("20151231234500");
+            MessageHelper.ParseDateTime("201512312345");
+            MessageHelper.ParseDateTime("2015123123");
+            MessageHelper.ParseDateTime("20151231");
+            MessageHelper.ParseDateTime("201512");
+            
+            return MessageHelper.ParseDateTime("2015");
         }
     }
 }
