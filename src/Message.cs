@@ -982,25 +982,6 @@ namespace Efferent.HL7.V2
 
             return isValid;
         }
-
-        private Regex _hexSequenceRegex;
-        private char _hexSequenceEscapeChar;
-
-        private Regex GetHexSequenceRegex() 
-        {
-            var escChar = Encoding.EscapeCharacter;
-
-            // Stale cache
-            if (_hexSequenceRegex == null || _hexSequenceEscapeChar != escChar) 
-            {
-                var esc = "\\x" + ((int)Encoding.EscapeCharacter).ToString("X2", CultureInfo.InvariantCulture);
-                
-                _hexSequenceRegex = new Regex(esc + "X([0-9A-Fa-f]*)" + esc, RegexOptions.Compiled);
-                _hexSequenceEscapeChar = escChar;
-            }
-
-            return _hexSequenceRegex;
-        }
         
         /// <summary>
         /// Decodes or normalizes hexadecimal escape sequences from all message lines.
@@ -1008,7 +989,8 @@ namespace Efferent.HL7.V2
         /// <param name="message">Array of message lines</param>
         private bool DecodeHexaSequences(IList<string> message, bool decomposeMultibyteLineBreaks = false)
         {
-            var regex = GetHexSequenceRegex();
+            var esc = "\\x" + ((int)this.Encoding.EscapeCharacter).ToString("X2", CultureInfo.InvariantCulture);
+            var regex = new Regex(esc + "X([0-9A-Fa-f]*)" + esc);
             bool hasChanged = false;
 
             for (int i=0; i<message.Count; i++)
