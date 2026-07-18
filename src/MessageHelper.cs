@@ -20,7 +20,9 @@ namespace Efferent.HL7.V2
         private static readonly Regex DateTimeRegex = new Regex(DATETIME_EXPR, RegexOptions.Singleline | RegexOptions.Compiled);
 #else
         [GeneratedRegex(DATETIME_EXPR, RegexOptions.Singleline)]
-        private static partial Regex DateTimeRegex();
+        private static partial Regex DateTimeRegexMethod();
+        
+        private static readonly Regex DateTimeRegex = DateTimeRegexMethod();
 #endif
 
         /// <summary>
@@ -176,11 +178,7 @@ namespace Efferent.HL7.V2
         {
             offset = TimeSpan.Zero;
 
-#if NETSTANDARD2_0
             var match = DateTimeRegex.Match(dateTimeString);
-#else
-            var match = DateTimeRegex().Match(dateTimeString);
-#endif
             
             if (!match.Success) 
             {
