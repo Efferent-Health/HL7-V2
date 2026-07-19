@@ -3,14 +3,14 @@ Set of general benchmarks for testing both different SDK versions, and also look
 ## How to run
 
 ```bash
-dotnet run -c Release -f net10.0
+dotnet run -c Release
 ```
 
 To run a specific benchmark:
 
 ```bash
-dotnet run -c Release -f net10.0 -- --filter '*Serialize*'
-dotnet run -c Release -f net10.0 -- --filter '*ParseMessage*'
+dotnet run -c Release -- --filter '*Serialize*'
+dotnet run -c Release -- --filter '*ParseMessage*'
 ```
 
 ## Baseline comparison

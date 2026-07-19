@@ -2,7 +2,6 @@ using System.IO;
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
 
 using Efferent.HL7.V2;
@@ -10,7 +9,7 @@ using Efferent.HL7.V2;
 namespace Benchmarks
 {
     /// <summary>
-    /// Basic benchmark comparing the nuget version to the local code, for both .NET Framework 4.8 and .NET 8.0.  
+    /// Basic benchmark comparing the nuget version to the local code.  
     /// Calls a copy of one of the tests that best reflects the usage scenarios (Parse and GetValue)
     /// </summary>
     [Config(typeof(Config))]

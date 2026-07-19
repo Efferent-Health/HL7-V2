@@ -1,10 +1,11 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
+
 using Efferent.HL7.V2;
 
 namespace Benchmarks
