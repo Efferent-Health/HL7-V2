@@ -14,13 +14,11 @@
 
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-        <PackageReference Include="HL7-V2" Version="3.7.3" Condition="!$(DefineConstants.Contains('LOCAL_CODE'))" />
+        <PackageReference Include="HL7-V2" Version="$(HL7V2Version)" Condition="'$(HL7V2Version)' != ''" />
     </ItemGroup>
 
     <ItemGroup>
-        <!-- only include a direct code ref if flag set, use nuget otherwise -->
-        <ProjectReference Include="..\src\HL7-V2.csproj" Condition="$(DefineConstants.Contains('LOCAL_CODE'))" />
+        <ProjectReference Include="..\src\HL7-V2.csproj" Condition="'$(HL7V2Version)' == ''" />
     </ItemGroup>
-
 
 </Project>

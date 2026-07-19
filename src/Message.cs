@@ -26,10 +26,6 @@ namespace Efferent.HL7.V2
 
         private static readonly char[] _queryDelimiter = ['.'];
 
-        private const string segmentRegex = @"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$";
-        private const string fieldRegex = @"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$";
-        private const string otherRegEx = @"^[1-9]([0-9]{1,2})?$";
-
         public Message()
         {
         }
@@ -232,7 +228,7 @@ namespace Efferent.HL7.V2
 
             if (isValid)
             {
-                var matches = Regex.Matches(allComponents[0], segmentRegex);
+                var matches = MessageHelper.SegmentRegex().Matches(allComponents[0]);
 
                 if (matches.Count < 1)
                     throw new HL7Exception("Request format is not valid: " + strValueFormat);
@@ -744,7 +740,7 @@ namespace Efferent.HL7.V2
         private static Field getField(Segment segment, string index)
         {
             int repetition = 0;
-            var matches = Regex.Matches(index, fieldRegex);
+            var matches = MessageHelper.FieldRegex().Matches(index);
 
             if (matches.Count < 1)
                 throw new HL7Exception("Invalid field index");
@@ -776,7 +772,7 @@ namespace Efferent.HL7.V2
         /// <returns>A boolean indicating whether the field has repetitions</returns>
         private static int getFieldRepetitions(Segment segment, string index)
         {
-            var matches = Regex.Matches(index, fieldRegex);
+            var matches = MessageHelper.FieldRegex().Matches(index);
 
             if (matches.Count < 1)
                 return 0;
@@ -829,7 +825,7 @@ namespace Efferent.HL7.V2
                             continue;
 
                         string segmentName = strSegment.Substring(0, 3);
-                        bool isValidSegmentName = Regex.IsMatch(segmentName, segmentRegex);
+                        bool isValidSegmentName = MessageHelper.SegmentRegex().IsMatch(segmentName);
 
                         if (!isValidSegmentName)
                             throw new HL7Exception("Invalid segment name found: " + strSegment, HL7Exception.BadMessage);
@@ -944,13 +940,13 @@ namespace Efferent.HL7.V2
 
             if (allComponents.Length > 0)
             {
-                if (Regex.IsMatch(allComponents[0], segmentRegex))
+                if (MessageHelper.SegmentRegex().IsMatch(allComponents[0]))
                 {
                     for (int i = 1; i < allComponents.Length; i++)
                     {
-                        if (i == 1 && Regex.IsMatch(allComponents[i], fieldRegex))
+                        if (i == 1 && MessageHelper.FieldRegex().IsMatch(allComponents[i]))
                             isValid = true;
-                        else if (i > 1 && Regex.IsMatch(allComponents[i], otherRegEx))
+                        else if (i > 1 && MessageHelper.OtherRegex().IsMatch(allComponents[i]))
                             isValid = true;
                         else
                             return false;

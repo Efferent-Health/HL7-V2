@@ -18,30 +18,16 @@ namespace Benchmarks
     [HideColumns("BuildConfiguration", "Error", "StdDev", "RatioSD")]
     public class ParseMessageBench
     {
-
-/*
-| Method                   | Job          | Runtime            | NuGetReferences     | Mean     | Ratio | Gen0    | Gen1   | Allocated | Alloc Ratio |
-|------------------------- |------------- |------------------- |-------------------- |---------:|------:|--------:|-------:|----------:|------------:|
-| ParseMessageAndGetValues | Net4.8 Local | .NET Framework 4.8 | Default             | 75.54 us |  1.59 | 31.7383 | 4.3945 | 195.49 KB |        1.08 |
-| ParseMessageAndGetValues | Net4.8 Nuget | .NET Framework 4.8 | HL7-V2 2.39 | 99.49 us |  2.10 | 40.5273 | 6.1035 | 249.25 KB |        1.38 |
-| ParseMessageAndGetValues | Net8 Local   | .NET 8.0           | Default             | 33.67 us |  0.71 |  8.3008 | 1.3428 | 127.68 KB |        0.71 |
-| ParseMessageAndGetValues | Net8 Nuget   | .NET 8.0           | HL7-V2 2.39 | 47.40 us |  1.00 | 11.7798 | 1.9531 |  180.7 KB |        1.00 |
- */
-
         internal static readonly string _sampleMessage = File.ReadAllText("Sample-Orm.txt");
 
         private class Config : ManualConfig
         {
             public Config()
             {
-                var baseJob = Job.ShortRun;
+                var baseJob = Job.MediumRun;
 
-                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=2.39").WithRuntime(CoreRuntime.Core80).WithId("Net8 Nuget").AsBaseline());
-                AddJob(baseJob.WithMsBuildArguments("/p:PackageReference=HL7-V2,Version=2.39").WithRuntime(ClrRuntime.Net48).WithId("Net4.8 Nuget"));
-
-                // custom config to include/exclude nuget reference or target project reference locally
-                AddJob(baseJob.WithRuntime(ClrRuntime.Net48).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net4.8 Local"));
-                AddJob(baseJob.WithRuntime(CoreRuntime.Core80).WithCustomBuildConfiguration("LOCAL_CODE").WithId("Net8 Local"));
+                AddJob(baseJob.WithMsBuildArguments("/p:HL7V2Version=3.7.2").WithId("NuGet 3.7.2").AsBaseline());
+                AddJob(baseJob.WithId("Local"));
             }
         }
 
@@ -51,12 +37,33 @@ namespace Benchmarks
             var msg = new Message(_sampleMessage);
             msg.ParseMessage(true);
 
-            var ack = msg.GetACK(true);
-            string sendingApp = ack.GetValue("MSH.3");
-            string sendingFacility = ack.GetValue("MSH.4");
-            string receivingApp = ack.GetValue("MSH.5");
-            string receivingFacility = ack.GetValue("MSH.6");
-            string messageType = ack.GetValue("MSH.9");
+            // 2-component paths: SegmentRegex + FieldSegmentRegex (×2 each)
+            _ = msg.GetValue("MSH.3");
+            _ = msg.GetValue("MSH.4");
+            _ = msg.GetValue("MSH.5");
+            _ = msg.GetValue("MSH.9");
+            _ = msg.GetValue("PID.7");
+            _ = msg.GetValue("PID.8");
+            _ = msg.GetValue("ORC.1");
+            _ = msg.GetValue("ORC.2");
+            _ = msg.GetValue("OBR.2");
+
+            // 3-component paths: SegmentRegex + FieldSegmentRegex + OtherRegex (×3 each)
+            _ = msg.GetValue("PID.5.1");
+            _ = msg.GetValue("PID.5.2");
+            _ = msg.GetValue("PID.5.3");
+            _ = msg.GetValue("PID.11.3");
+            _ = msg.GetValue("PID.11.4");
+            _ = msg.GetValue("PID.11.5");
+            _ = msg.GetValue("ORC.12.1");
+            _ = msg.GetValue("ORC.12.2");
+            _ = msg.GetValue("OBR.4.1");
+            _ = msg.GetValue("OBR.4.2");
+            _ = msg.GetValue("OBR.4.3");
+
+            // Segment occurrence index: exercises the [n] capture group in SegmentRegex
+            _ = msg.GetValue("NTE[1].3");
+            _ = msg.GetValue("NTE[2].3");
         }
     }
 }

@@ -10,9 +10,37 @@ namespace Efferent.HL7.V2
     /// <summary>
     /// Provides utility methods for parsing, splitting, formatting, and serializing HL7 messages.
     /// </summary>
-    public static class MessageHelper
+    public static partial class MessageHelper
     {
         private static readonly string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
+
+#if NET7_0_OR_GREATER
+        [GeneratedRegex(@"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$")]
+        internal static partial Regex SegmentRegex();
+
+        [GeneratedRegex(@"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$")]
+        internal static partial Regex FieldRegex();
+
+        [GeneratedRegex(@"^[1-9]([0-9]{1,2})?$")]
+        internal static partial Regex OtherRegex();
+
+        [GeneratedRegex("\x0B(.*?)\x1C\x0D", RegexOptions.Singleline)]
+        private static partial Regex ExtractMessagesRegex();
+
+        [GeneratedRegex(@"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$", RegexOptions.Singleline)]
+        private static partial Regex ParseDateTimeRegex();
+#else
+        internal static Regex SegmentRegex() => _segmentRegex;
+        internal static Regex FieldRegex() => _fieldRegex;
+        internal static Regex OtherRegex() => _otherRegex;
+        private static Regex ExtractMessagesRegex() => _extractMessagesRegex;
+        private static Regex ParseDateTimeRegex() => _parseDateTimeRegex;
+        private static readonly Regex _segmentRegex = new Regex(@"^([A-Z][A-Z][A-Z1-9])([\(\[]([0-9]+)[\)\]]){0,1}$");
+        private static readonly Regex _fieldRegex = new Regex(@"^([0-9]+)([\(\[]([0-9]+)[\)\]]){0,1}$");
+        private static readonly Regex _otherRegex = new Regex(@"^[1-9]([0-9]{1,2})?$");
+        private static readonly Regex _extractMessagesRegex = new Regex("\x0B(.*?)\x1C\x0D", RegexOptions.Singleline);
+        private static readonly Regex _parseDateTimeRegex = new Regex(@"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$", RegexOptions.Singleline);
+#endif
 
         /// <summary>
         /// Splits a string into a list of substrings based on the specified string delimiter.
@@ -77,8 +105,7 @@ namespace Efferent.HL7.V2
         /// <returns>An array of HL7 message strings extracted from within the MLLP framing characters.</returns>
         public static string[] ExtractMessages(string messages)
         {
-            var expr = "\x0B(.*?)\x1C\x0D";
-            var matches = Regex.Matches(messages, expr, RegexOptions.Singleline);
+            var matches = ExtractMessagesRegex().Matches(messages);
             var list = new List<string>();
 
             foreach (Match m in matches)
@@ -157,8 +184,7 @@ namespace Efferent.HL7.V2
         /// <exception cref="FormatException">Thrown when <paramref name="throwException"/> is <c>true</c> and the input string is not in a valid HL7 date time format.</exception>
         public static DateTime? ParseDateTime(string dateTimeString, out TimeSpan offset, bool throwException = false, bool applyOffset = false)
         {
-            var expr = @"^\s*((?:18|19|20)[0-9]{2})(?:(1[0-2]|0[1-9])(?:(3[0-1]|[1-2][0-9]|0[1-9])(?:([0-1][0-9]|2[0-3])(?:([0-5][0-9])(?:([0-5][0-9](?:\.[0-9]{1,4})?)?)?)?)?)?)?(?:([+-][0-1][0-9]|[+-]2[0-3])([0-5][0-9]))?\s*$";
-            var matches = Regex.Matches(dateTimeString, expr, RegexOptions.Singleline);
+            var matches = ParseDateTimeRegex().Matches(dateTimeString);
 
             offset = new TimeSpan();
 
