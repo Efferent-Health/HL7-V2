@@ -44,19 +44,27 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
+    permissions:
+      id-token: write # Required for NuGet Trusted Publisher (OIDC)
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v7
         with:
           dotnet-version: '10.0.x'
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
       - name: Prepare NuGet package
         run: dotnet pack src/HL7-V2.csproj --configuration Release
 
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: Efferent
       - name: Publish NuGet package
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "src/bin/Release/**/*.nupkg" --api-key "$env:NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json"
+        run: dotnet nuget push "src/bin/Release/**/*.nupkg" --source "https://api.nuget.org/v3/index.json" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
