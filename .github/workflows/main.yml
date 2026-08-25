@@ -24,7 +24,7 @@ jobs:
             tfm: 'net10.0'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v7
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
